@@ -62,19 +62,111 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
     }
   };
 
-  const exportRecord = (record: PatientRecord) => {
-    const dataStr = JSON.stringify(record, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = `${record.patient.name.replace(/\s+/g, '_')}_dental_record.json`;
-    link.click();
-    
-    toast({
-      title: "Export Complete",
-      description: `Patient record for ${record.patient.name} has been exported.`,
-    });
+  const exportRecord = async (record: PatientRecord) => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+
+      const safeName = record.patient.name.replace(/\s+/g, '_');
+
+      // Title
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text('Dental Patient Record', 14, 20);
+
+      // Patient Information
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Patient Information', 14, 35);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Name: ${record.patient.name || 'N/A'}`, 14, 45);
+      doc.text(`Age: ${record.patient.age || 'N/A'}`, 14, 52);
+      doc.text(`Date of Birth: ${record.patient.dob || 'N/A'}`, 14, 59);
+      doc.text(`Phone: ${record.patient.phone || 'N/A'}`, 14, 66);
+      doc.text(`Email: ${record.patient.email || 'N/A'}`, 14, 73);
+
+      // Dental Status Summary
+      const statusCounts = getStatusCounts(record);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Dental Status Summary', 14, 88);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Healthy Teeth: ${statusCounts.healthy}`, 14, 98);
+      doc.text(`Problem Teeth: ${statusCounts.problem}`, 14, 105);
+      doc.text(`Treated Teeth: ${statusCounts.treated}`, 14, 112);
+      doc.text(`Missing Teeth: ${statusCounts.missing}`, 14, 119);
+
+      // Clinical Notes
+      let yPos = 135;
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Clinical Notes', 14, yPos);
+      yPos += 10;
+
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      
+      if (record.notes.chiefComplaint) {
+        doc.text('Chief Complaint:', 14, yPos);
+        const complaintLines = doc.splitTextToSize(record.notes.chiefComplaint, 180);
+        doc.text(complaintLines, 14, yPos + 7);
+        yPos += 7 + (complaintLines.length * 5) + 5;
+      }
+
+      if (record.notes.clinicalNotes) {
+        doc.text('Clinical Notes:', 14, yPos);
+        const clinicalLines = doc.splitTextToSize(record.notes.clinicalNotes, 180);
+        doc.text(clinicalLines, 14, yPos + 7);
+        yPos += 7 + (clinicalLines.length * 5) + 5;
+      }
+
+      if (record.notes.treatmentNotes) {
+        doc.text('Treatment Notes:', 14, yPos);
+        const treatmentLines = doc.splitTextToSize(record.notes.treatmentNotes, 180);
+        doc.text(treatmentLines, 14, yPos + 7);
+        yPos += 7 + (treatmentLines.length * 5) + 5;
+      }
+
+      // Treatments
+      if (record.treatments && record.treatments.length > 0) {
+        yPos += 5;
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('Treatment Plan', 14, yPos);
+        yPos += 10;
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        record.treatments.forEach((treatment, index) => {
+          const treatmentText = `${index + 1}. ${treatment.name}${treatment.tooth ? ` (Tooth ${treatment.tooth})` : ''}`;
+          doc.text(treatmentText, 14, yPos);
+          yPos += 7;
+        });
+      }
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'italic');
+      doc.text(`Generated on ${formatDate(record.savedAt)}`, 14, 280);
+
+      // Save PDF
+      doc.save(`${safeName}_dental_record.pdf`);
+
+      toast({
+        title: "Export Complete",
+        description: `Patient record for ${record.patient.name} has been exported as PDF.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
