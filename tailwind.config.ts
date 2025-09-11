@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -46,6 +47,12 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        tooth: {
+          healthy: "hsl(var(--healthy-tooth))",
+          problem: "hsl(var(--problem-tooth))",
+          treated: "hsl(var(--treated-tooth))",
+          missing: "hsl(var(--missing-tooth))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
