@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -15,31 +15,22 @@ export default function Auth() {
   const [practiceName, setPracticeName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
         navigate('/');
       }
     };
-    checkUser();
+    checkAuth();
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName) {
-      toast({
-        variant: "destructive",
-        title: "Missing fields",
-        description: "Please fill in all required fields."
-      });
-      return;
-    }
-
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -48,23 +39,18 @@ export default function Auth() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: fullName,
-            practice_name: practiceName
+            practice_name: practiceName,
           }
         }
       });
 
-      if (error) throw error;
-
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account."
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign up failed",
-        description: error.message
-      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Check your email for the confirmation link!');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -72,35 +58,22 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({
-        variant: "destructive",
-        title: "Missing fields",
-        description: "Please enter your email and password."
-      });
-      return;
-    }
-
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
-      if (error) throw error;
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in."
-      });
-      navigate('/');
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign in failed",
-        description: error.message
-      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Welcome back!');
+        navigate('/');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -110,9 +83,12 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-dental-50 to-dental-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="text-4xl mb-2">🦷</div>
-          <CardTitle className="text-2xl text-dental-800">Sweet Tooth Dental</CardTitle>
-          <CardDescription>Access your dental practice management system</CardDescription>
+          <CardTitle className="text-2xl font-bold text-dental-900">
+            🦷 Sweet Tooth Dental
+          </CardTitle>
+          <CardDescription>
+            Sign in to manage your dental practice
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -154,7 +130,7 @@ export default function Auth() {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -169,15 +145,15 @@ export default function Auth() {
                   <Input
                     id="practiceName"
                     type="text"
-                    placeholder="Enter your practice name (optional)"
+                    placeholder="Enter your practice name"
                     value={practiceName}
                     onChange={(e) => setPracticeName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email-signup">Email *</Label>
+                  <Label htmlFor="signupEmail">Email</Label>
                   <Input
-                    id="email-signup"
+                    id="signupEmail"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
@@ -186,14 +162,15 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password-signup">Password *</Label>
+                  <Label htmlFor="signupPassword">Password</Label>
                   <Input
-                    id="password-signup"
+                    id="signupPassword"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Create a password (min 6 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
