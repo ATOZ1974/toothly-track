@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,35 +14,37 @@ export default function Auth() {
   const [practiceName, setPracticeName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
   useEffect(() => {
     // Check if user is already authenticated
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (session) {
         navigate('/');
       }
     };
     checkAuth();
   }, [navigate]);
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signUp({
+      const {
+        error
+      } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: fullName,
-            practice_name: practiceName,
+            practice_name: practiceName
           }
         }
       });
-
       if (error) {
         toast.error(error.message);
       } else {
@@ -55,17 +56,16 @@ export default function Auth() {
       setLoading(false);
     }
   };
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const {
+        error
+      } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
-
       if (error) {
         toast.error(error.message);
       } else {
@@ -78,10 +78,8 @@ export default function Auth() {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-dental-50 to-dental-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+  return <div className="min-h-screen bg-gradient-to-br from-dental-50 to-dental-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md mx-[20px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-dental-900">
             Dental Patient Management
@@ -90,7 +88,7 @@ export default function Auth() {
             Sign in to manage your dental practice
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="rounded-full">
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -101,25 +99,11 @@ export default function Auth() {
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign In'}
@@ -131,47 +115,19 @@ export default function Auth() {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+                  <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="practiceName">Practice Name</Label>
-                  <Input
-                    id="practiceName"
-                    type="text"
-                    placeholder="Enter your practice name"
-                    value={practiceName}
-                    onChange={(e) => setPracticeName(e.target.value)}
-                  />
+                  <Input id="practiceName" type="text" placeholder="Enter your practice name" value={practiceName} onChange={e => setPracticeName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail">Email</Label>
-                  <Input
-                    id="signupEmail"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Input id="signupEmail" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupPassword">Password</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    placeholder="Create a password (min 6 characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <Input id="signupPassword" type="password" placeholder="Create a password (min 6 characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Creating account...' : 'Sign Up'}
@@ -181,6 +137,5 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
