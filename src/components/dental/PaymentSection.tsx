@@ -17,8 +17,11 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
   const [method, setMethod] = useState<Payment['method']>('cash');
   const [paidAt, setPaidAt] = useState<string>(toLocalDateTimeInput(new Date()));
   const [notes, setNotes] = useState<string>('');
+  const [totalAmount, setTotalAmount] = useState<string>('');
 
-  const total = useMemo(() => payments.reduce((sum, p) => sum + (p.amount || 0), 0), [payments]);
+  const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + (p.amount || 0), 0), [payments]);
+  const totalAmountNum = parseFloat(totalAmount) || 0;
+  const balance = totalAmountNum - totalPaid;
 
   const addPayment = () => {
     const value = parseFloat(amount);
@@ -48,9 +51,35 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
   return (
     <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle className="text-xl text-foreground">Payments & Billing</CardTitle>
+        <CardTitle className="text-xl text-foreground">Payment Tracking</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Total Amount */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+          <div>
+            <label className="text-sm font-medium">Total Treatment Cost</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={totalAmount}
+              onChange={(e) => setTotalAmount(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <div className="text-center">
+            <label className="text-sm font-medium">Amount Paid</label>
+            <div className="text-2xl font-bold text-green-600 mt-2">₹{totalPaid.toFixed(2)}</div>
+          </div>
+          <div className="text-center">
+            <label className="text-sm font-medium">Balance</label>
+            <div className={`text-2xl font-bold mt-2 ${balance <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              ₹{balance.toFixed(2)}
+            </div>
+          </div>
+        </div>
+
         {/* Add Payment */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
@@ -135,8 +164,11 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
                 ))}
               </tbody>
             </table>
-            <div className="flex justify-end mt-3 text-sm font-medium">
-              Total: ₹{total.toFixed(2)}
+            <div className="flex justify-between mt-3 text-sm font-medium">
+              <span>Total Paid: ₹{totalPaid.toFixed(2)}</span>
+              <span className={balance <= 0 ? 'text-green-600' : 'text-red-600'}>
+                Balance: ₹{balance.toFixed(2)}
+              </span>
             </div>
           </div>
         ) : (

@@ -84,7 +84,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-dental-900">
-            🦷 Sweet Tooth Dental
+            Dental Patient Management
           </CardTitle>
           <CardDescription>
             Sign in to manage your dental practice

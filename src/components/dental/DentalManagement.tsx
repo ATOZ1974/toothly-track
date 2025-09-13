@@ -38,6 +38,7 @@ export function DentalManagement() {
   });
 
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
 
   const [showRecords, setShowRecords] = useState(false);
 
@@ -54,7 +55,7 @@ export function DentalManagement() {
     }
 
     const record: PatientRecord = {
-      id: generateId(),
+      id: currentRecordId || generateId(),
       savedAt: new Date().toISOString(),
       patient: patientInfo,
       teeth: toothStates,
@@ -66,12 +67,26 @@ export function DentalManagement() {
 
     try {
       const existingRecords = JSON.parse(localStorage.getItem('dentalPatients') || '[]');
-      existingRecords.push(record);
+      
+      if (currentRecordId) {
+        // Update existing record
+        const index = existingRecords.findIndex((r: PatientRecord) => r.id === currentRecordId);
+        if (index !== -1) {
+          existingRecords[index] = record;
+        } else {
+          existingRecords.push(record);
+        }
+      } else {
+        // Create new record
+        existingRecords.push(record);
+        setCurrentRecordId(record.id);
+      }
+      
       localStorage.setItem('dentalPatients', JSON.stringify(existingRecords));
       
       toast({
         title: "Record Saved",
-        description: `Patient record for ${patientInfo.name} has been saved successfully.`,
+        description: `Patient record for ${patientInfo.name} has been ${currentRecordId ? 'updated' : 'saved'} successfully.`,
       });
     } catch (error) {
       toast({
@@ -90,6 +105,7 @@ export function DentalManagement() {
     setFiles({ personal: [], diagnostics: [], treatment: [], xrays: [] });
     setPayments([]);
     setSelectedTooth(null);
+    setCurrentRecordId(null);
     
     toast({
       title: "Form Cleared",
@@ -179,6 +195,7 @@ export function DentalManagement() {
               setFiles(record.files);
               setPayments(record.payments || []);
               setSelectedTooth(null);
+              setCurrentRecordId(record.id);
               
               toast({
                 title: "Patient Loaded",
