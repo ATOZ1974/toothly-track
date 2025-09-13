@@ -40,9 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      // Proactively clear any stale tokens to avoid refresh errors
+      if (!session) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
       setLoading(false);
     });
 
@@ -50,7 +54,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Try global sign out first; fallback to local if session is missing
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      await supabase.auth.signOut({ scope: 'local' });
+      setSession(null);
+      setUser(null);
+      return;
+    }
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      if (
+        error.message?.toLowerCase().includes('session') ||
+        error.message?.toLowerCase().includes('refresh')
+      ) {
+        await supabase.auth.signOut({ scope: 'local' });
+        setSession(null);
+        setUser(null);
+      } else {
+        console.error('Sign out error:', error);
+      }
+    }
   };
 
   return (
