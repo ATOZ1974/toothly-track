@@ -69,39 +69,47 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
 
       const safeName = record.patient.name.replace(/\s+/g, '_');
 
+      const ensureSpace = (needed: number) => {
+        const y = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : 0;
+        // We use current y position variable instead
+      };
+
       // Title
       doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
       doc.text('Dental Patient Record', 14, 20);
 
+      let yPos = 30;
+
       // Patient Information
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text('Patient Information', 14, 35);
-      
+      doc.text('Patient Information', 14, yPos);
+      yPos += 10;
+
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text(`Name: ${record.patient.name || 'N/A'}`, 14, 45);
-      doc.text(`Age: ${record.patient.age || 'N/A'}`, 14, 52);
-      doc.text(`Date of Birth: ${record.patient.dob || 'N/A'}`, 14, 59);
-      doc.text(`Phone: ${record.patient.phone || 'N/A'}`, 14, 66);
-      doc.text(`Email: ${record.patient.email || 'N/A'}`, 14, 73);
+      doc.text(`Name: ${record.patient.name || 'N/A'}`, 14, yPos); yPos += 7;
+      doc.text(`Age: ${record.patient.age ?? 'N/A'}`, 14, yPos); yPos += 7;
+      doc.text(`Date of Birth: ${record.patient.dob || 'N/A'}`, 14, yPos); yPos += 7;
+      doc.text(`Phone: ${record.patient.phone || 'N/A'}`, 14, yPos); yPos += 7;
+      doc.text(`Email: ${record.patient.email || 'N/A'}`, 14, yPos); yPos += 12;
 
       // Dental Status Summary
       const statusCounts = getStatusCounts(record);
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text('Dental Status Summary', 14, 88);
-      
+      doc.text('Dental Status Summary', 14, yPos);
+      yPos += 10;
+
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text(`Healthy Teeth: ${statusCounts.healthy}`, 14, 98);
-      doc.text(`Problem Teeth: ${statusCounts.problem}`, 14, 105);
-      doc.text(`Treated Teeth: ${statusCounts.treated}`, 14, 112);
-      doc.text(`Missing Teeth: ${statusCounts.missing}`, 14, 119);
+      doc.text(`Healthy Teeth: ${statusCounts.healthy}`, 14, yPos); yPos += 7;
+      doc.text(`Problem Teeth: ${statusCounts.problem}`, 14, yPos); yPos += 7;
+      doc.text(`Treated Teeth: ${statusCounts.treated}`, 14, yPos); yPos += 7;
+      doc.text(`Missing Teeth: ${statusCounts.missing}`, 14, yPos); yPos += 12;
 
       // Clinical Notes
-      let yPos = 135;
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text('Clinical Notes', 14, yPos);
@@ -109,26 +117,26 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
 
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      
+
       if (record.notes.chiefComplaint) {
-        doc.text('Chief Complaint:', 14, yPos);
+        doc.text('Chief Complaint:', 14, yPos); yPos += 7;
         const complaintLines = doc.splitTextToSize(record.notes.chiefComplaint, 180);
-        doc.text(complaintLines, 14, yPos + 7);
-        yPos += 7 + (complaintLines.length * 5) + 5;
+        doc.text(complaintLines, 14, yPos);
+        yPos += (complaintLines.length * 5) + 5;
       }
 
       if (record.notes.clinicalNotes) {
-        doc.text('Clinical Notes:', 14, yPos);
+        doc.text('Clinical Notes:', 14, yPos); yPos += 7;
         const clinicalLines = doc.splitTextToSize(record.notes.clinicalNotes, 180);
-        doc.text(clinicalLines, 14, yPos + 7);
-        yPos += 7 + (clinicalLines.length * 5) + 5;
+        doc.text(clinicalLines, 14, yPos);
+        yPos += (clinicalLines.length * 5) + 5;
       }
 
       if (record.notes.treatmentNotes) {
-        doc.text('Treatment Notes:', 14, yPos);
+        doc.text('Treatment Notes:', 14, yPos); yPos += 7;
         const treatmentLines = doc.splitTextToSize(record.notes.treatmentNotes, 180);
-        doc.text(treatmentLines, 14, yPos + 7);
-        yPos += 7 + (treatmentLines.length * 5) + 5;
+        doc.text(treatmentLines, 14, yPos);
+        yPos += (treatmentLines.length * 5) + 5;
       }
 
       // Treatments
@@ -146,7 +154,89 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
           doc.text(treatmentText, 14, yPos);
           yPos += 7;
         });
+        yPos += 5;
       }
+
+      // Payments
+      if (record.payments && record.payments.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('Payments', 14, yPos);
+        yPos += 10;
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        let total = 0;
+        record.payments.forEach((p, idx) => {
+          const line = `${idx + 1}. ${formatDate(p.paidAt)} • ${p.method.toUpperCase()} • ₹${p.amount.toFixed(2)}${p.notes ? ` • ${p.notes}` : ''}`;
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
+          doc.text(line, 14, yPos);
+          yPos += 7;
+          total += p.amount;
+        });
+        if (yPos > 270) { doc.addPage(); yPos = 20; }
+        doc.setFont(undefined, 'bold');
+        doc.text(`Total: ₹${total.toFixed(2)}`, 14, yPos);
+        doc.setFont(undefined, 'normal');
+        yPos += 12;
+      }
+
+      // Files & Images
+      const categories = Object.keys(record.files || {}) as Array<keyof typeof record.files>;
+      const pretty = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+      categories.forEach((catKey) => {
+        const categoryFiles = (record.files as any)[catKey] as Array<{ name: string; dataUrl: string; type: string; uploadedAt?: string }>;
+        if (!categoryFiles || categoryFiles.length === 0) return;
+
+        const images = categoryFiles.filter((f) => f.type?.startsWith('image/') && f.dataUrl);
+        const others = categoryFiles.filter((f) => !f.type?.startsWith('image/'));
+
+        if (images.length > 0) {
+          if (yPos > 260) { doc.addPage(); yPos = 20; }
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text(`${pretty(String(catKey))} Images`, 14, yPos);
+          yPos += 8;
+
+          const imgW = 60; const imgH = 45; const gap = 6; const cols = 3; const left = 14;
+          images.forEach((file, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            if (col === 0 && row > 0) {
+              if (yPos + imgH + 14 > 280) { doc.addPage(); yPos = 20; }
+            }
+            const x = left + col * (imgW + gap);
+            const format = file.type?.includes('png') ? 'PNG' : 'JPEG';
+            try {
+              doc.addImage(file.dataUrl, format as any, x, yPos, imgW, imgH);
+              doc.setFontSize(8);
+              doc.setFont(undefined, 'normal');
+              const caption = `${file.name}${file.uploadedAt ? ` • ${formatDate(file.uploadedAt)}` : ''}`;
+              doc.text(doc.splitTextToSize(caption, imgW), x, yPos + imgH + 4);
+            } catch {}
+            if (col === cols - 1 || idx === images.length - 1) {
+              yPos += imgH + 14;
+            }
+          });
+        }
+
+        if (others.length > 0) {
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'bold');
+          doc.text(`${pretty(String(catKey))} Documents`, 14, yPos);
+          yPos += 8;
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          others.forEach((f) => {
+            if (yPos > 270) { doc.addPage(); yPos = 20; }
+            doc.text(`• ${f.name}`, 14, yPos);
+            yPos += 6;
+          });
+          yPos += 4;
+        }
+      });
 
       // Footer
       doc.setFontSize(8);
@@ -157,14 +247,14 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
       doc.save(`${safeName}_dental_record.pdf`);
 
       toast({
-        title: "Export Complete",
+        title: 'Export Complete',
         description: `Patient record for ${record.patient.name} has been exported as PDF.`,
       });
     } catch (error) {
       toast({
-        title: "Export Failed",
-        description: "Failed to generate PDF. Please try again.",
-        variant: "destructive"
+        title: 'Export Failed',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive'
       });
     }
   };

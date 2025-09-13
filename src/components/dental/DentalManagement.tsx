@@ -8,7 +8,8 @@ import { TreatmentPlanning } from './TreatmentPlanning';
 import { FileUpload } from './FileUpload';
 import { ClinicalNotes } from './ClinicalNotes';
 import { PatientRecords } from './PatientRecords';
-import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories } from '@/types/dental';
+import { PaymentSection } from './PaymentSection';
+import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories, Payment } from '@/types/dental';
 
 export function DentalManagement() {
   const { toast } = useToast();
@@ -36,6 +37,8 @@ export function DentalManagement() {
     xrays: [],
   });
 
+  const [payments, setPayments] = useState<Payment[]>([]);
+
   const [showRecords, setShowRecords] = useState(false);
 
   const generateId = () => `dental-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -58,6 +61,7 @@ export function DentalManagement() {
       treatments,
       notes,
       files,
+      payments,
     };
 
     try {
@@ -84,6 +88,7 @@ export function DentalManagement() {
     setTreatments([]);
     setNotes({ chiefComplaint: '', clinicalNotes: '', treatmentNotes: '' });
     setFiles({ personal: [], diagnostics: [], treatment: [], xrays: [] });
+    setPayments([]);
     setSelectedTooth(null);
     
     toast({
@@ -134,6 +139,9 @@ export function DentalManagement() {
           onFilesChange={setFiles}
         />
 
+        {/* Payments */}
+        <PaymentSection payments={payments} onChange={setPayments} />
+
         {/* Clinical Notes */}
         <ClinicalNotes
           notes={notes}
@@ -169,6 +177,7 @@ export function DentalManagement() {
               setTreatments(record.treatments);
               setNotes(record.notes);
               setFiles(record.files);
+              setPayments(record.payments || []);
               setSelectedTooth(null);
               
               toast({

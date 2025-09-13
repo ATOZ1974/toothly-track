@@ -57,7 +57,8 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
             name: file.name,
             size: file.size,
             type: file.type,
-            dataUrl: e.target?.result as string || '',
+            dataUrl: (e.target?.result as string) || '',
+            uploadedAt: new Date().toISOString(),
           });
         };
         

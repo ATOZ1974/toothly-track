@@ -28,6 +28,7 @@ export interface UploadedFile {
   size: number;
   type: string;
   dataUrl: string;
+  uploadedAt?: string;
 }
 
 export interface FileCategories {
@@ -35,6 +36,14 @@ export interface FileCategories {
   diagnostics: UploadedFile[];
   treatment: UploadedFile[];
   xrays: UploadedFile[];
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  method: 'cash' | 'card' | 'upi' | 'insurance' | 'other';
+  paidAt: string; // ISO datetime
+  notes?: string;
 }
 
 export interface PatientRecord {
@@ -45,6 +54,7 @@ export interface PatientRecord {
   treatments: Treatment[];
   notes: ClinicalNotes;
   files: FileCategories;
+  payments?: Payment[];
 }
 
 export type ToothStatus = 'healthy' | 'problem' | 'treated' | 'missing';

@@ -54,7 +54,21 @@ export function PatientForm({ patientInfo, onPatientInfoChange }: PatientFormPro
               id="patientDOB"
               type="date"
               value={patientInfo.dob}
-              onChange={(e) => updateField('dob', e.target.value)}
+              onChange={(e) => {
+                const dob = e.target.value;
+                let computedAge: number | null = null;
+                if (dob) {
+                  const d = new Date(dob);
+                  if (!isNaN(d.getTime())) {
+                    const today = new Date();
+                    let age = today.getFullYear() - d.getFullYear();
+                    const m = today.getMonth() - d.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+                    computedAge = age >= 0 && age <= 120 ? age : null;
+                  }
+                }
+                onPatientInfoChange({ ...patientInfo, dob, age: computedAge });
+              }}
               className="mt-2"
             />
           </div>
