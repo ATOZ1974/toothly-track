@@ -1,22 +1,37 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { DentalManagement } from '@/components/dental/DentalManagement';
 import { Button } from '@/components/ui/button';
+import { LogOut, User } from 'lucide-react';
 
 const Index = () => {
   const { user, signOut } = useAuth();
 
   return (
-    <div>
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="text-lg font-semibold text-dental-800">
-            Welcome, {user?.user_metadata?.full_name || user?.email}
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
+      {/* Navigation Header */}
+      <div className="bg-card/80 backdrop-blur-sm shadow-[var(--shadow-soft)] border-b border-border">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 text-foreground">
+              <User className="w-5 h-5 text-primary" />
+              <span className="text-sm sm:text-base font-medium">
+                Welcome, {user?.user_metadata?.full_name || user?.email}
+              </span>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={signOut}
+              className="w-full sm:w-auto"
+              size="sm"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
-          <Button variant="outline" onClick={signOut}>
-            Sign Out
-          </Button>
         </div>
       </div>
+      
+      {/* Main Content */}
       <DentalManagement />
     </div>
   );

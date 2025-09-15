@@ -15,8 +15,11 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-dental-50 to-dental-100 flex items-center justify-center">
-        <div className="text-2xl font-semibold text-dental-800">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Loading...</p>
+        </div>
       </div>
     );
   }

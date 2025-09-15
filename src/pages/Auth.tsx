@@ -78,17 +78,17 @@ export default function Auth() {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-dental-50 to-dental-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md mx-[20px]">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-dental-900">
-            Dental Patient Management
+  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <Card className="w-full max-w-md mx-4 sm:mx-auto shadow-[var(--shadow-dental)]">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            🦷 Dental Patient Management
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm sm:text-base">
             Sign in to manage your dental practice
           </CardDescription>
         </CardHeader>
-        <CardContent className="rounded-full">
+        <CardContent className="p-4 sm:p-6">
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -118,8 +118,8 @@ export default function Auth() {
                   <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="practiceName">Practice Name</Label>
-                  <Input id="practiceName" type="text" placeholder="Enter your practice name" value={practiceName} onChange={e => setPracticeName(e.target.value)} />
+                  <Label htmlFor="hospitalName">Hospital Name</Label>
+                  <Input id="hospitalName" type="text" placeholder="Enter your hospital name" value={practiceName} onChange={e => setPracticeName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail">Email</Label>

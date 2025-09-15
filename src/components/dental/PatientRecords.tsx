@@ -4,61 +4,55 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Search, FileDown, Trash2, FolderOpen, Eye } from 'lucide-react';
+import { Search, FileDown, Trash2, FolderOpen, Eye, RefreshCw } from 'lucide-react';
 import type { PatientRecord } from '@/types/dental';
 
 interface PatientRecordsProps {
+  patients: PatientRecord[];
+  loading: boolean;
   onLoadPatient: (record: PatientRecord) => void;
+  onDeletePatient: (patientId: string) => Promise<void>;
 }
 
-export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
+export function PatientRecords({ patients, loading, onLoadPatient, onDeletePatient }: PatientRecordsProps) {
   const { toast } = useToast();
-  const [records, setRecords] = useState<PatientRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredRecords, setFilteredRecords] = useState<PatientRecord[]>([]);
-
-  useEffect(() => {
-    loadRecords();
-  }, []);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
-      setFilteredRecords(records);
+      setFilteredRecords(patients);
     } else {
-      const filtered = records.filter(record => 
+      const filtered = patients.filter(record => 
         record.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.patient.phone.includes(searchQuery) ||
-        record.patient.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (record.patient.phone && record.patient.phone.includes(searchQuery)) ||
+        (record.patient.email && record.patient.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       setFilteredRecords(filtered);
     }
-  }, [records, searchQuery]);
+  }, [patients, searchQuery]);
 
-  const loadRecords = () => {
-    try {
-      const savedRecords = JSON.parse(localStorage.getItem('dentalPatients') || '[]');
-      setRecords(savedRecords);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load patient records.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteRecord = (id: string) => {
+  const handleDeleteRecord = async (id: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this patient record? This action cannot be undone.');
     
     if (confirmDelete) {
-      const updatedRecords = records.filter(record => record.id !== id);
-      setRecords(updatedRecords);
-      localStorage.setItem('dentalPatients', JSON.stringify(updatedRecords));
-      
-      toast({
-        title: "Record Deleted",
-        description: "Patient record has been permanently deleted.",
-      });
+      setDeleting(id);
+      try {
+        await onDeletePatient(id);
+        toast({
+          title: "Record Deleted",
+          description: "Patient record has been permanently deleted.",
+        });
+      } catch (error) {
+        toast({
+          title: "Delete Error",
+          description: "Failed to delete patient record. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setDeleting(null);
+      }
     }
   };
 
@@ -281,13 +275,13 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
 
   return (
     <Card className="shadow-[var(--shadow-card)]">
-      <CardHeader>
-        <CardTitle className="text-xl text-foreground">Patient Records</CardTitle>
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-lg sm:text-xl text-foreground">Patient Records</CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Search */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -295,17 +289,33 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
+              disabled={loading}
             />
           </div>
-          <Button onClick={loadRecords} variant="outline">
-            Refresh
+          <Button variant="outline" disabled={loading} className="w-full sm:w-auto">
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </>
+            )}
           </Button>
         </div>
 
         {/* Records List */}
-        {filteredRecords.length === 0 ? (
+        {loading ? (
           <div className="text-center py-12 text-muted-foreground">
-            {records.length === 0 ? (
+            <RefreshCw className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50 animate-spin" />
+            <p className="text-lg">Loading patient records...</p>
+          </div>
+        ) : filteredRecords.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            {patients.length === 0 ? (
               <div className="space-y-2">
                 <FolderOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
                 <p className="text-lg">No patient records found</p>
@@ -326,8 +336,8 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
               
               return (
                 <Card key={record.id} className="border-border hover:border-primary/30 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-start justify-between">
                           <div>
@@ -395,11 +405,11 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-col gap-2 ml-4">
+                      <div className="flex flex-row lg:flex-col gap-2 mt-4 lg:mt-0 lg:ml-4">
                         <Button
                           size="sm"
                           onClick={() => onLoadPatient(record)}
-                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                          className="flex-1 lg:flex-none bg-gradient-to-r from-primary to-accent hover:opacity-90"
                         >
                           <Eye className="w-4 h-4 mr-1" />
                           Load
@@ -409,6 +419,7 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => exportRecord(record)}
+                          className="flex-1 lg:flex-none"
                         >
                           <FileDown className="w-4 h-4 mr-1" />
                           Export
@@ -417,10 +428,12 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => deleteRecord(record.id)}
+                          onClick={() => handleDeleteRecord(record.id)}
+                          disabled={deleting === record.id}
+                          className="flex-1 lg:flex-none"
                         >
                           <Trash2 className="w-4 h-4 mr-1" />
-                          Delete
+                          {deleting === record.id ? 'Deleting...' : 'Delete'}
                         </Button>
                       </div>
                     </div>
@@ -432,9 +445,9 @@ export function PatientRecords({ onLoadPatient }: PatientRecordsProps) {
         )}
 
         {/* Summary */}
-        {records.length > 0 && (
+        {patients.length > 0 && !loading && (
           <div className="text-sm text-muted-foreground text-center pt-4 border-t">
-            Showing {filteredRecords.length} of {records.length} patient record{records.length !== 1 ? 's' : ''}
+            Showing {filteredRecords.length} of {patients.length} patient record{patients.length !== 1 ? 's' : ''}
           </div>
         )}
       </CardContent>

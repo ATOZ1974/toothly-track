@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePatients } from '@/hooks/usePatients';
 import { PatientForm } from './PatientForm';
 import { DentalChart } from './DentalChart';
 import { TreatmentPlanning } from './TreatmentPlanning';
@@ -13,6 +15,8 @@ import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes a
 
 export function DentalManagement() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { patients, loading, savePatient, deletePatient } = usePatients();
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     name: '',
@@ -42,9 +46,16 @@ export function DentalManagement() {
 
   const [showRecords, setShowRecords] = useState(false);
 
-  const generateId = () => `dental-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const savePatientRecord = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save patient records.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const savePatientRecord = () => {
     if (!patientInfo.name.trim()) {
       toast({
         title: "Missing Information",
@@ -54,35 +65,21 @@ export function DentalManagement() {
       return;
     }
 
-    const record: PatientRecord = {
-      id: currentRecordId || generateId(),
-      savedAt: new Date().toISOString(),
-      patient: patientInfo,
-      teeth: toothStates,
-      treatments,
-      notes,
-      files,
-      payments,
-    };
-
     try {
-      const existingRecords = JSON.parse(localStorage.getItem('dentalPatients') || '[]');
+      const record = {
+        patient: patientInfo,
+        teeth: toothStates,
+        treatments,
+        notes,
+        files,
+        payments,
+      };
+
+      const savedId = await savePatient(record, currentRecordId || undefined);
       
-      if (currentRecordId) {
-        // Update existing record
-        const index = existingRecords.findIndex((r: PatientRecord) => r.id === currentRecordId);
-        if (index !== -1) {
-          existingRecords[index] = record;
-        } else {
-          existingRecords.push(record);
-        }
-      } else {
-        // Create new record
-        existingRecords.push(record);
-        setCurrentRecordId(record.id);
+      if (!currentRecordId) {
+        setCurrentRecordId(savedId);
       }
-      
-      localStorage.setItem('dentalPatients', JSON.stringify(existingRecords));
       
       toast({
         title: "Record Saved",
@@ -114,15 +111,15 @@ export function DentalManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8">
+      <div className="container mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
         <Card className="border-0 shadow-[var(--shadow-dental)] bg-gradient-to-r from-card to-muted">
-          <CardHeader className="text-center">
-            <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <CardHeader className="text-center p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               🦷 Dental Patient Management
             </CardTitle>
-            <p className="text-muted-foreground text-lg">Comprehensive dental care tracking system</p>
+            <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
           </CardHeader>
         </Card>
 
@@ -166,19 +163,24 @@ export function DentalManagement() {
 
         {/* Action Buttons */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-wrap gap-4 justify-end">
-              <Button variant="outline" onClick={clearForm}>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+              <Button variant="outline" onClick={clearForm} className="w-full sm:w-auto">
                 Clear Form
               </Button>
               <Button 
                 variant="secondary"
                 onClick={() => setShowRecords(!showRecords)}
+                className="w-full sm:w-auto"
               >
                 {showRecords ? 'Hide' : 'Show'} Patient Records
               </Button>
-              <Button onClick={savePatientRecord} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                💾 Save Patient Record
+              <Button 
+                onClick={savePatientRecord} 
+                className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                disabled={loading}
+              >
+                💾 {loading ? 'Saving...' : 'Save Patient Record'}
               </Button>
             </div>
           </CardContent>
@@ -187,6 +189,8 @@ export function DentalManagement() {
         {/* Patient Records */}
         {showRecords && (
           <PatientRecords
+            patients={patients}
+            loading={loading}
             onLoadPatient={(record) => {
               setPatientInfo(record.patient);
               setToothStates(record.teeth);
@@ -202,6 +206,7 @@ export function DentalManagement() {
                 description: `Loaded record for ${record.patient.name}`,
               });
             }}
+            onDeletePatient={deletePatient}
           />
         )}
       </div>
