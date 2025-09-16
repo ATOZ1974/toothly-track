@@ -1,13 +1,17 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileImage, FileText, X } from 'lucide-react';
+import { Upload, FileImage, FileText, X, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import type { FileCategories, FileCategory, UploadedFile } from '@/types/dental';
 
 interface FileUploadProps {
   files: FileCategories;
   onFilesChange: (files: FileCategories) => void;
+  patientId?: string;
 }
 
 const categoryConfig = {
@@ -37,7 +41,16 @@ const categoryConfig = {
   },
 };
 
-export function FileUpload({ files, onFilesChange }: FileUploadProps) {
+export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState<{ [key in FileCategory]: boolean }>({
+    personal: false,
+    diagnostics: false,
+    treatment: false,
+    xrays: false,
+  });
+  
   const fileInputRefs = useRef<{ [key in FileCategory]: HTMLInputElement | null }>({
     personal: null,
     diagnostics: null,
@@ -45,46 +58,128 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
     xrays: null,
   });
 
-  const handleFileUpload = (category: FileCategory, fileList: FileList | null) => {
-    if (!fileList) return;
-
-    const newFiles = Array.from(fileList);
-    const promises = newFiles.map((file) => {
-      return new Promise<UploadedFile>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            dataUrl: (e.target?.result as string) || '',
-            uploadedAt: new Date().toISOString(),
-          });
-        };
+  const handleFileUpload = async (category: FileCategory, fileList: FileList | null) => {
+    if (!fileList || !user) return;
+    
+    setUploading(prev => ({ ...prev, [category]: true }));
+    
+    try {
+      const newFiles = Array.from(fileList);
+      const uploadPromises = newFiles.map(async (file) => {
+        // Generate unique file path
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${category}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
-        if (file.type.startsWith('image/')) {
-          reader.readAsDataURL(file);
-        } else {
-          // For non-image files, store a placeholder
-          reader.readAsDataURL(new Blob(['']));
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('patient-files')
+          .upload(fileName, file);
+          
+        if (uploadError) throw uploadError;
+        
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('patient-files')
+          .getPublicUrl(fileName);
+        
+        // Save file metadata to database if patientId exists
+        if (patientId) {
+          const { error: dbError } = await supabase
+            .from('patient_files')
+            .insert({
+              patient_id: patientId,
+              file_category: category,
+              file_name: file.name,
+              file_path: fileName, // Store the storage path, not public URL
+              file_size: file.size,
+              mime_type: file.type,
+            });
+            
+          if (dbError) throw dbError;
         }
+        
+        // Create data URL for preview
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve((e.target?.result as string) || '');
+          if (file.type.startsWith('image/')) {
+            reader.readAsDataURL(file);
+          } else {
+            resolve(''); // No preview for non-image files
+          }
+        });
+        
+        return {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          dataUrl: dataUrl || publicUrl, // Use dataUrl for images, publicUrl for others
+          uploadedAt: new Date().toISOString(),
+        };
       });
-    });
 
-    Promise.all(promises).then((uploadedFiles) => {
+      const uploadedFiles = await Promise.all(uploadPromises);
+      
       onFilesChange({
         ...files,
         [category]: [...files[category], ...uploadedFiles],
       });
-    });
+      
+      toast({
+        title: "Files uploaded successfully",
+        description: `${uploadedFiles.length} file(s) uploaded to ${categoryConfig[category].title}`,
+      });
+      
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your files. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(prev => ({ ...prev, [category]: false }));
+    }
   };
 
-  const removeFile = (category: FileCategory, index: number) => {
-    const updatedFiles = files[category].filter((_, i) => i !== index);
-    onFilesChange({
-      ...files,
-      [category]: updatedFiles,
-    });
+  const removeFile = async (category: FileCategory, index: number) => {
+    const file = files[category][index];
+    
+    try {
+      // If file has a storage path (not a data URL), delete from storage
+      if (patientId && file.dataUrl && !file.dataUrl.startsWith('data:')) {
+        // Delete from storage using the file path stored in dataUrl
+        const { error: storageError } = await supabase.storage
+          .from('patient-files')
+          .remove([file.dataUrl]);
+          
+        if (storageError) console.warn('Error deleting from storage:', storageError);
+        
+        // Delete from database
+        const { error: dbError } = await supabase
+          .from('patient_files')
+          .delete()
+          .eq('patient_id', patientId)
+          .eq('file_name', file.name)
+          .eq('file_category', category);
+          
+        if (dbError) console.warn('Error deleting from database:', dbError);
+      }
+      
+      const updatedFiles = files[category].filter((_, i) => i !== index);
+      onFilesChange({
+        ...files,
+        [category]: updatedFiles,
+      });
+      
+    } catch (error) {
+      console.error('Error removing file:', error);
+      toast({
+        title: "Error removing file",
+        description: "There was an error removing the file. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -133,9 +228,14 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
                   onClick={() => fileInputRefs.current[category]?.click()}
                   size="sm"
                   className="mb-3"
+                  disabled={uploading[category]}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Files
+                  {uploading[category] ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4 mr-2" />
+                  )}
+                  {uploading[category] ? 'Uploading...' : 'Upload Files'}
                 </Button>
                 
                 {files[category].length > 0 && (

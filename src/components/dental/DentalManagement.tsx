@@ -150,6 +150,7 @@ export function DentalManagement() {
         <FileUpload
           files={files}
           onFilesChange={setFiles}
+          patientId={currentRecordId || undefined}
         />
 
         {/* Payments */}
