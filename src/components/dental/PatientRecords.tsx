@@ -203,12 +203,18 @@ export function PatientRecords({ patients, loading, onLoadPatient, onDeletePatie
             const x = left + col * (imgW + gap);
             const format = file.type?.includes('png') ? 'PNG' : 'JPEG';
             try {
+              // For PDF generation, we need to ensure the image URL is accessible
+              // Use the public URL directly since the bucket is now public
               doc.addImage(file.dataUrl, format as any, x, yPos, imgW, imgH);
               doc.setFontSize(8);
               doc.setFont(undefined, 'normal');
               const caption = `${file.name}${file.uploadedAt ? ` • ${formatDate(file.uploadedAt)}` : ''}`;
               doc.text(doc.splitTextToSize(caption, imgW), x, yPos + imgH + 4);
-            } catch {}
+            } catch (error) {
+              // If image fails to load, add a placeholder
+              doc.setFontSize(8);
+              doc.text(`[Image: ${file.name}]`, x, yPos + imgH/2);
+            }
             if (col === cols - 1 || idx === images.length - 1) {
               yPos += imgH + 14;
             }

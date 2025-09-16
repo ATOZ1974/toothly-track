@@ -113,7 +113,7 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
           name: file.name,
           size: file.size,
           type: file.type,
-          dataUrl: dataUrl || publicUrl, // Use dataUrl for images, publicUrl for others
+          dataUrl: publicUrl, // Always use publicUrl for storage consistency
           uploadedAt: new Date().toISOString(),
         };
       });
@@ -146,14 +146,21 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
     const file = files[category][index];
     
     try {
-      // If file has a storage path (not a data URL), delete from storage
-      if (patientId && file.dataUrl && !file.dataUrl.startsWith('data:')) {
-        // Delete from storage using the file path stored in dataUrl
-        const { error: storageError } = await supabase.storage
-          .from('patient-files')
-          .remove([file.dataUrl]);
+      // If file has a storage path, delete from storage
+      if (patientId && file.dataUrl) {
+        // Extract the file path from the public URL
+        const urlParts = file.dataUrl.split('/');
+        const pathIndex = urlParts.findIndex(part => part === 'patient-files');
+        const filePath = pathIndex !== -1 ? urlParts.slice(pathIndex + 1).join('/') : '';
+        
+        if (filePath) {
+          const { error: storageError } = await supabase.storage
+            .from('patient-files')
+            .remove([filePath]);
+            
+          if (storageError) console.warn('Error deleting from storage:', storageError);
+        }
           
-        if (storageError) console.warn('Error deleting from storage:', storageError);
         
         // Delete from database
         const { error: dbError } = await supabase
