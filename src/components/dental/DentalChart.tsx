@@ -54,17 +54,18 @@ export function DentalChart({
     <button
       onClick={() => onToothSelect(toothNumber)}
       className={`
-        relative w-12 h-16 rounded-lg border-2 transition-all duration-200 
+        relative w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 rounded-lg border-2 transition-all duration-200 
         ${getToothColor(toothStates[toothNumber])}
         ${selectedTooth === toothNumber 
           ? 'border-destructive shadow-lg scale-110' 
-          : 'border-primary/30 hover:border-primary'
+          : 'border-primary/30 hover:border-primary active:scale-95'
         }
-        flex items-center justify-center text-white font-bold text-sm
-        shadow-[var(--shadow-soft)]
+        flex items-center justify-center text-white font-bold text-xs sm:text-sm
+        shadow-[var(--shadow-soft)] touch-manipulation
+        min-h-[44px] min-w-[44px]
       `}
     >
-      {toothNumber}
+      <span className="text-xs sm:text-sm">{toothNumber}</span>
       {selectedTooth === toothNumber && (
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-pulse" />
       )}
@@ -85,51 +86,55 @@ export function DentalChart({
       
       <CardContent className="space-y-6">
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-4 bg-muted/50 rounded-lg">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-tooth-healthy rounded" />
+            <div className="w-4 h-4 bg-tooth-healthy rounded flex-shrink-0" />
             <span className="text-sm">Healthy</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-tooth-problem rounded" />
-            <span className="text-sm">Needs Attention</span>
+            <div className="w-4 h-4 bg-tooth-problem rounded flex-shrink-0" />
+            <span className="text-sm">Problem</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-tooth-treated rounded" />
+            <div className="w-4 h-4 bg-tooth-treated rounded flex-shrink-0" />
             <span className="text-sm">Treated</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-tooth-missing rounded" />
+            <div className="w-4 h-4 bg-tooth-missing rounded flex-shrink-0" />
             <span className="text-sm">Missing</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-transparent border-2 border-destructive rounded" />
+          <div className="flex items-center gap-2 sm:col-span-1 lg:col-span-1">
+            <div className="w-4 h-4 bg-transparent border-2 border-destructive rounded flex-shrink-0" />
             <span className="text-sm">Selected</span>
           </div>
         </div>
 
         {/* Dental Chart */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Upper Jaw */}
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Upper Jaw</h3>
-            <div className="flex justify-center">
-              <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${upperTeeth.length}, minmax(0, 1fr))` }}>
-                {upperTeeth.map((tooth) => (
-                  <ToothButton key={tooth} toothNumber={tooth} />
-                ))}
+            <div className="overflow-x-auto pb-2">
+              <div className="flex justify-center min-w-fit px-4">
+                <div className="grid gap-1 sm:gap-2" style={{ gridTemplateColumns: `repeat(${upperTeeth.length}, minmax(0, 1fr))` }}>
+                  {upperTeeth.map((tooth) => (
+                    <ToothButton key={tooth} toothNumber={tooth} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Lower Jaw */}
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Lower Jaw</h3>
-            <div className="flex justify-center">
-              <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${lowerTeeth.length}, minmax(0, 1fr))` }}>
-                {lowerTeeth.map((tooth) => (
-                  <ToothButton key={tooth} toothNumber={tooth} />
-                ))}
+            <div className="overflow-x-auto pb-2">
+              <div className="flex justify-center min-w-fit px-4">
+                <div className="grid gap-1 sm:gap-2" style={{ gridTemplateColumns: `repeat(${lowerTeeth.length}, minmax(0, 1fr))` }}>
+                  {lowerTeeth.map((tooth) => (
+                    <ToothButton key={tooth} toothNumber={tooth} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -139,33 +144,37 @@ export function DentalChart({
         {selectedTooth && (
           <Card className="bg-accent/10 border-accent/30">
             <CardContent className="p-4">
-              <h3 className="font-semibold text-accent-foreground mb-4">
+              <h3 className="font-semibold text-accent-foreground mb-4 text-center sm:text-left">
                 Selected Tooth: {selectedTooth}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Button 
                   onClick={() => markTooth('healthy')}
-                  className="bg-tooth-healthy hover:bg-tooth-healthy/80 text-white"
+                  className="bg-tooth-healthy hover:bg-tooth-healthy/80 text-white min-h-[44px] touch-manipulation"
+                  size="sm"
                 >
                   Mark Healthy
                 </Button>
                 <Button 
                   onClick={() => markTooth('problem')}
-                  className="bg-tooth-problem hover:bg-tooth-problem/80 text-white"
+                  className="bg-tooth-problem hover:bg-tooth-problem/80 text-white min-h-[44px] touch-manipulation"
+                  size="sm"
                 >
-                  Needs Attention
+                  Problem
                 </Button>
                 <Button 
                   onClick={() => markTooth('treated')}
-                  className="bg-tooth-treated hover:bg-tooth-treated/80 text-white"
+                  className="bg-tooth-treated hover:bg-tooth-treated/80 text-white min-h-[44px] touch-manipulation"
+                  size="sm"
                 >
-                  Mark Treated
+                  Treated
                 </Button>
                 <Button 
                   onClick={() => markTooth('missing')}
-                  className="bg-tooth-missing hover:bg-tooth-missing/80 text-white"
+                  className="bg-tooth-missing hover:bg-tooth-missing/80 text-white min-h-[44px] touch-manipulation"
+                  size="sm"
                 >
-                  Mark Missing
+                  Missing
                 </Button>
               </div>
             </CardContent>
