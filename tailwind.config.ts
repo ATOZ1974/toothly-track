@@ -54,6 +54,18 @@ export default {
           treated: "hsl(var(--treated-tooth))",
           missing: "hsl(var(--missing-tooth))",
         },
+        glass: {
+          primary: "var(--glass-primary)",
+          secondary: "var(--glass-secondary)",
+          background: "var(--glass-background)",
+          card: "var(--glass-card)",
+          border: "var(--glass-border)",
+        },
+        scene: {
+          primary: "hsl(var(--scene-primary))",
+          accent: "hsl(var(--scene-accent))",
+          secondary: "hsl(var(--scene-secondary))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -72,25 +84,40 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0", opacity: "0" },
+          to: { height: "var(--radix-accordion-content-height)", opacity: "1" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)", opacity: "1" },
+          to: { height: "0", opacity: "0" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "rotate-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "float": "float 6s ease-in-out infinite",
+        "rotate-slow": "rotate-slow 20s linear infinite",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
     },
   },

@@ -78,64 +78,64 @@ export default function Auth() {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <Card className="w-full max-w-md mx-4 sm:mx-auto shadow-[var(--shadow-dental)]">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+  return <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
+      <div className="glass-card w-full max-w-md mx-4 sm:mx-auto rounded-2xl animate-scale-in">
+        <div className="text-center space-y-2 p-6 pb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             🦷 Dental Patient Management
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Sign in to manage your dental practice
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6">
+          </p>
+        </div>
+        <div className="p-4 sm:p-6 pt-0">
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 glass-card">
+              <TabsTrigger value="signin" className="glass-button">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="glass-button">Sign Up</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin">
+            <TabsContent value="signin" className="animate-fade-in">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="glass-card" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
+                  <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required className="glass-card" />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full glass-button" disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
             
-            <TabsContent value="signup">
+            <TabsContent value="signup" className="animate-fade-in">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                  <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required className="glass-card" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="hospitalName">Hospital Name</Label>
-                  <Input id="hospitalName" type="text" placeholder="Enter your hospital name" value={practiceName} onChange={e => setPracticeName(e.target.value)} />
+                  <Input id="hospitalName" type="text" placeholder="Enter your hospital name" value={practiceName} onChange={e => setPracticeName(e.target.value)} className="glass-card" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail">Email</Label>
-                  <Input id="signupEmail" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <Input id="signupEmail" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="glass-card" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signupPassword">Password</Label>
-                  <Input id="signupPassword" type="password" placeholder="Create a password (min 6 characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+                  <Input id="signupPassword" type="password" placeholder="Create a password (min 6 characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="glass-card" />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full glass-button" disabled={loading}>
                   {loading ? 'Creating account...' : 'Sign Up'}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>;
 }

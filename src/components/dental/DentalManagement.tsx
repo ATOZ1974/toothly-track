@@ -111,17 +111,15 @@ export function DentalManagement() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8 relative">
       <div className="container mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
-        <Card className="border-0 shadow-[var(--shadow-dental)] bg-gradient-to-r from-card to-muted">
-          <CardHeader className="text-center p-4 sm:p-6">
-            <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              🦷 Dental Patient Management
-            </CardTitle>
-            <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
-          </CardHeader>
-        </Card>
+        <div className="glass-card rounded-2xl text-center p-4 sm:p-6 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+            🦷 Dental Patient Management
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
+        </div>
 
         {/* Patient Information */}
         <PatientForm 
@@ -163,29 +161,27 @@ export function DentalManagement() {
         />
 
         {/* Action Buttons */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
-              <Button variant="outline" onClick={clearForm} className="w-full sm:w-auto">
-                Clear Form
-              </Button>
-              <Button 
-                variant="secondary"
-                onClick={() => setShowRecords(!showRecords)}
-                className="w-full sm:w-auto"
-              >
-                {showRecords ? 'Hide' : 'Show'} Patient Records
-              </Button>
-              <Button 
-                onClick={savePatientRecord} 
-                className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                disabled={loading}
-              >
-                💾 {loading ? 'Saving...' : 'Save Patient Record'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="glass-card rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+            <Button variant="outline" onClick={clearForm} className="w-full sm:w-auto glass-button">
+              Clear Form
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => setShowRecords(!showRecords)}
+              className="w-full sm:w-auto glass-button"
+            >
+              {showRecords ? 'Hide' : 'Show'} Patient Records
+            </Button>
+            <Button 
+              onClick={savePatientRecord} 
+              className="w-full sm:w-auto glass-button bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              disabled={loading}
+            >
+              💾 {loading ? 'Saving...' : 'Save Patient Record'}
+            </Button>
+          </div>
+        </div>
 
         {/* Patient Records */}
         {showRecords && (
