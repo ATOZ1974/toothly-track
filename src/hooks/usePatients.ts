@@ -94,7 +94,6 @@ export function usePatients() {
 
       setPatients(records);
     } catch (error) {
-      console.error('Error loading patients:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -188,7 +187,6 @@ export function usePatients() {
       await loadPatients();
       return patientData.id;
     } catch (error) {
-      console.error('Error saving patient:', error);
       throw error;
     }
   };
@@ -207,7 +205,6 @@ export function usePatients() {
       
       await loadPatients();
     } catch (error) {
-      console.error('Error deleting patient:', error);
       throw error;
     }
   };

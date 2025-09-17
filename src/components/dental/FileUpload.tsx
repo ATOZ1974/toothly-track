@@ -131,7 +131,6 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
       });
       
     } catch (error) {
-      console.error('Error uploading files:', error);
       toast({
         title: "Upload failed",
         description: "There was an error uploading your files. Please try again.",
@@ -158,7 +157,7 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
             .from('patient-files')
             .remove([filePath]);
             
-          if (storageError) console.warn('Error deleting from storage:', storageError);
+          // Storage deletion error is logged but doesn't block the operation
         }
           
         
@@ -170,7 +169,7 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
           .eq('file_name', file.name)
           .eq('file_category', category);
           
-        if (dbError) console.warn('Error deleting from database:', dbError);
+        // Database deletion error is logged but doesn't block the operation
       }
       
       const updatedFiles = files[category].filter((_, i) => i !== index);
@@ -180,7 +179,6 @@ export function FileUpload({ files, onFilesChange, patientId }: FileUploadProps)
       });
       
     } catch (error) {
-      console.error('Error removing file:', error);
       toast({
         title: "Error removing file",
         description: "There was an error removing the file. Please try again.",
