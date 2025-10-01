@@ -9,25 +9,25 @@ All colors MUST be HSL for proper theming support.
 @layer base {
   :root {
     /* Base dental-themed palette */
-    --background: 210 25% 98%;
-    --foreground: 210 15% 20%;
+    --background: 210 25% 10%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 210 15% 20%;
+    --card: 210 25% 12%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 15% 20%;
+    --popover: 210 25% 12%;
+    --popover-foreground: 0 0% 100%;
 
     /* Dental blue primary theme */
     --primary: 210 85% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 210 85% 65%;
 
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 210 15% 25%;
+    --secondary: 210 20% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 15% 96%;
-    --muted-foreground: 210 10% 50%;
+    --muted: 210 15% 15%;
+    --muted-foreground: 0 0% 85%;
 
     --accent: 195 85% 45%;
     --accent-foreground: 0 0% 100%;
