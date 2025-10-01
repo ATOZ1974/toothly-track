@@ -13,7 +13,7 @@ export function usePatients() {
     
     setLoading(true);
     try {
-      // Load patients with their dental records and treatments
+      // Load patients with their dental records, treatments, files, and payments
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
         .select(`
@@ -22,7 +22,8 @@ export function usePatients() {
             *,
             treatments (*)
           ),
-          patient_files (*)
+          patient_files (*),
+          payments (*)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -34,6 +35,7 @@ export function usePatients() {
         const dentalRecord = patient.dental_records?.[0];
         const treatments = dentalRecord?.treatments || [];
         const files = patient.patient_files || [];
+        const payments = patient.payments || [];
 
         // Group files by category
         return {
@@ -88,7 +90,13 @@ export function usePatients() {
               uploadedAt: f.created_at,
             })),
           },
-          payments: [], // Will be added later when payments table is created
+          payments: payments.map(p => ({
+            id: p.id,
+            amount: typeof p.amount === 'string' ? parseFloat(p.amount) : p.amount,
+            method: p.payment_method as 'cash' | 'card' | 'upi' | 'insurance' | 'other',
+            paidAt: p.paid_at,
+            notes: p.notes || undefined,
+          })),
         };
       });
 
@@ -228,8 +236,32 @@ export function usePatients() {
             .from('patient_files')
             .insert(newFiles);
 
-          if (filesError) throw filesError;
+        if (filesError) throw filesError;
         }
+      }
+
+      // Save payments
+      if (record.payments && record.payments.length > 0) {
+        // Delete existing payments for this patient
+        await supabase
+          .from('payments')
+          .delete()
+          .eq('patient_id', patientData.id);
+
+        // Insert new payments
+        const { error: paymentsError } = await supabase
+          .from('payments')
+          .insert(
+            record.payments.map(payment => ({
+              patient_id: patientData.id,
+              amount: payment.amount,
+              payment_method: payment.method,
+              paid_at: payment.paidAt,
+              notes: payment.notes,
+            }))
+          );
+
+        if (paymentsError) throw paymentsError;
       }
 
       await loadPatients();
