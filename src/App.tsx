@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Scene3D } from "@/components/3d/Scene3D";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -17,7 +16,7 @@ const AppContent = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center relative">
-        <Scene3D />
+        <div className="animated-bg" />
         <div className="glass-card rounded-2xl p-8 text-center space-y-4 animate-scale-in">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-lg font-medium text-foreground">Loading...</p>
@@ -28,7 +27,7 @@ const AppContent = () => {
 
   return (
     <div className="relative min-h-screen">
-      <Scene3D />
+      <div className="animated-bg" />
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
