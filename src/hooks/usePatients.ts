@@ -184,6 +184,54 @@ export function usePatients() {
         if (treatmentsError) throw treatmentsError;
       }
 
+      // Save files to database if they don't exist yet
+      const allFiles = [
+        ...record.files.personal.map(f => ({ ...f, category: 'personal' })),
+        ...record.files.diagnostics.map(f => ({ ...f, category: 'diagnostics' })),
+        ...record.files.treatment.map(f => ({ ...f, category: 'treatment' })),
+        ...record.files.xrays.map(f => ({ ...f, category: 'xrays' })),
+      ];
+
+      if (allFiles.length > 0) {
+        // Get existing files from database
+        const { data: existingFiles } = await supabase
+          .from('patient_files')
+          .select('file_name, file_category')
+          .eq('patient_id', patientData.id);
+
+        const existingFileKeys = new Set(
+          (existingFiles || []).map(f => `${f.file_category}-${f.file_name}`)
+        );
+
+        // Insert only new files
+        const newFiles = allFiles
+          .filter(f => !existingFileKeys.has(`${f.category}-${f.name}`))
+          .map(f => {
+            // Extract file path from public URL
+            const urlParts = f.dataUrl.split('/');
+            const pathIndex = urlParts.findIndex(part => part === 'patient-files');
+            const filePath = pathIndex !== -1 ? urlParts.slice(pathIndex + 1).join('/') : '';
+
+            return {
+              patient_id: patientData.id,
+              file_category: f.category,
+              file_name: f.name,
+              file_path: filePath,
+              file_size: f.size,
+              mime_type: f.type,
+            };
+          })
+          .filter(f => f.file_path); // Only insert files with valid paths
+
+        if (newFiles.length > 0) {
+          const { error: filesError } = await supabase
+            .from('patient_files')
+            .insert(newFiles);
+
+          if (filesError) throw filesError;
+        }
+      }
+
       await loadPatients();
       return patientData.id;
     } catch (error) {
