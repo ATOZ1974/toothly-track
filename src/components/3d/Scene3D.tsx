@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, memo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere, Box, Torus } from '@react-three/drei';
 import * as THREE from 'three';
@@ -96,61 +96,69 @@ function BackgroundGradient() {
   );
 }
 
+const Scene3DContent = memo(() => (
+  <Canvas
+    camera={{ position: [0, 0, 8], fov: 60 }}
+    style={{ background: 'transparent' }}
+    gl={{ preserveDrawingBuffer: true }}
+    dpr={[1, 2]}
+  >
+    <BackgroundGradient />
+    
+    {/* Ambient lighting */}
+    <ambientLight intensity={0.3} />
+    <directionalLight position={[10, 10, 5]} intensity={0.5} />
+    <pointLight position={[-10, -10, -5]} intensity={0.3} color="#4A90E2" />
+    
+    {/* Floating geometries */}
+    <FloatingGeometry
+      position={[-4, 2, -2]}
+      geometry="sphere"
+      color="#4A90E2"
+      rotationSpeed={0.005}
+    />
+    <FloatingGeometry
+      position={[4, -1, -3]}
+      geometry="box"
+      color="#7B68EE"
+      rotationSpeed={0.003}
+    />
+    <FloatingGeometry
+      position={[0, 3, -4]}
+      geometry="torus"
+      color="#20B2AA"
+      rotationSpeed={0.007}
+    />
+    <FloatingGeometry
+      position={[-3, -2, -1]}
+      geometry="sphere"
+      color="#FF6B6B"
+      rotationSpeed={0.004}
+    />
+    <FloatingGeometry
+      position={[3, 1, -5]}
+      geometry="box"
+      color="#4ECDC4"
+      rotationSpeed={0.006}
+    />
+    
+    {/* Interactive controls (disabled for background) */}
+    <OrbitControls
+      enableZoom={false}
+      enablePan={false}
+      enableRotate={false}
+      autoRotate={true}
+      autoRotateSpeed={0.5}
+    />
+  </Canvas>
+));
+
+Scene3DContent.displayName = 'Scene3DContent';
+
 export function Scene3D() {
   return (
     <div className="scene-fixed">
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        style={{ background: 'transparent' }}
-      >
-        <BackgroundGradient />
-        
-        {/* Ambient lighting */}
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[10, 10, 5]} intensity={0.5} />
-        <pointLight position={[-10, -10, -5]} intensity={0.3} color="#4A90E2" />
-        
-        {/* Floating geometries */}
-        <FloatingGeometry
-          position={[-4, 2, -2]}
-          geometry="sphere"
-          color="#4A90E2"
-          rotationSpeed={0.005}
-        />
-        <FloatingGeometry
-          position={[4, -1, -3]}
-          geometry="box"
-          color="#7B68EE"
-          rotationSpeed={0.003}
-        />
-        <FloatingGeometry
-          position={[0, 3, -4]}
-          geometry="torus"
-          color="#20B2AA"
-          rotationSpeed={0.007}
-        />
-        <FloatingGeometry
-          position={[-3, -2, -1]}
-          geometry="sphere"
-          color="#FF6B6B"
-          rotationSpeed={0.004}
-        />
-        <FloatingGeometry
-          position={[3, 1, -5]}
-          geometry="box"
-          color="#4ECDC4"
-          rotationSpeed={0.006}
-        />
-        
-        {/* Interactive controls (disabled for background) */}
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          enableRotate={false}
-          autoRotate={true}
-          autoRotateSpeed={0.5}
-        />
-      </Canvas>
+      <Scene3DContent />
     </div>
   );
 }
