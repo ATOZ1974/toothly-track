@@ -6,36 +6,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, Plus } from 'lucide-react';
 import type { Payment } from '@/types/dental';
-
 interface PaymentSectionProps {
   payments: Payment[];
   onChange: (payments: Payment[]) => void;
 }
-
-export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
+export function PaymentSection({
+  payments,
+  onChange
+}: PaymentSectionProps) {
   const [amount, setAmount] = useState<string>('');
   const [method, setMethod] = useState<Payment['method']>('cash');
   const [paidAt, setPaidAt] = useState<string>(toLocalDateTimeInput(new Date()));
   const [notes, setNotes] = useState<string>('');
   const [totalAmount, setTotalAmount] = useState<string>('');
-
   const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + (p.amount || 0), 0), [payments]);
   const totalAmountNum = parseFloat(totalAmount) || 0;
   const balance = totalAmountNum - totalPaid;
-
   const addPayment = () => {
     const value = parseFloat(amount);
     if (isNaN(value) || value <= 0) return;
-
     const id = `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const payment: Payment = {
       id,
       amount: value,
       method,
       paidAt: new Date(paidAt).toISOString(),
-      notes: notes?.trim() || undefined,
+      notes: notes?.trim() || undefined
     };
-
     onChange([...(payments || []), payment]);
     // reset form
     setAmount('');
@@ -43,30 +40,19 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
     setPaidAt(toLocalDateTimeInput(new Date()));
     setNotes('');
   };
-
   const removePayment = (id: string) => {
     onChange((payments || []).filter(p => p.id !== id));
   };
-
-  return (
-    <Card className="shadow-[var(--shadow-card)]">
+  return <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle className="text-xl text-foreground">Payment Tracking</CardTitle>
+        <CardTitle className="text-foreground text-3xl">Payment Details</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Total Amount */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
           <div>
             <label className="text-sm font-medium">Total Treatment Cost</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={totalAmount}
-              onChange={(e) => setTotalAmount(e.target.value)}
-              className="mt-2"
-            />
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} className="mt-2" />
           </div>
           <div className="text-center">
             <label className="text-sm font-medium">Amount Paid</label>
@@ -84,15 +70,7 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="text-sm font-medium">Amount</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="mt-2"
-            />
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} className="mt-2" />
           </div>
           <div>
             <label className="text-sm font-medium">Method</label>
@@ -111,22 +89,11 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
           </div>
           <div>
             <label className="text-sm font-medium">Date & Time</label>
-            <Input
-              type="datetime-local"
-              value={paidAt}
-              onChange={(e) => setPaidAt(e.target.value)}
-              className="mt-2"
-            />
+            <Input type="datetime-local" value={paidAt} onChange={e => setPaidAt(e.target.value)} className="mt-2" />
           </div>
           <div className="md:col-span-2">
             <label className="text-sm font-medium">Notes</label>
-            <Textarea
-              placeholder="Optional notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="mt-2"
-              rows={1}
-            />
+            <Textarea placeholder="Optional notes" value={notes} onChange={e => setNotes(e.target.value)} className="mt-2" rows={1} />
           </div>
         </div>
         <div className="flex justify-end">
@@ -136,8 +103,7 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
         </div>
 
         {/* Payments List */}
-        {(payments && payments.length > 0) ? (
-          <div className="overflow-x-auto">
+        {payments && payments.length > 0 ? <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-muted-foreground">
                 <tr className="border-b">
@@ -149,8 +115,7 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((p) => (
-                  <tr key={p.id} className="border-b last:border-0">
+                {payments.map(p => <tr key={p.id} className="border-b last:border-0">
                     <td className="py-2">{formatDate(p.paidAt)}</td>
                     <td className="py-2 capitalize">{p.method}</td>
                     <td className="py-2">₹{p.amount.toFixed(2)}</td>
@@ -160,8 +125,7 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>)}
               </tbody>
             </table>
             <div className="flex justify-between mt-3 text-sm font-medium">
@@ -170,15 +134,10 @@ export function PaymentSection({ payments, onChange }: PaymentSectionProps) {
                 Balance: ₹{balance.toFixed(2)}
               </span>
             </div>
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground">No payments added.</div>
-        )}
+          </div> : <div className="text-sm text-muted-foreground">No payments added.</div>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
-
 function toLocalDateTimeInput(date: Date) {
   const pad = (n: number) => String(n).padStart(2, '0');
   const yyyy = date.getFullYear();
@@ -188,7 +147,6 @@ function toLocalDateTimeInput(date: Date) {
   const mi = pad(date.getMinutes());
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 }
-
 function formatDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleString();

@@ -12,40 +12,43 @@ import { ClinicalNotes } from './ClinicalNotes';
 import { PatientRecords } from './PatientRecords';
 import { PaymentSection } from './PaymentSection';
 import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories, Payment } from '@/types/dental';
-
 export function DentalManagement() {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { patients, loading, savePatient, deletePatient } = usePatients();
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    patients,
+    loading,
+    savePatient,
+    deletePatient
+  } = usePatients();
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     name: '',
     age: null,
     dob: '',
     phone: '',
-    email: '',
+    email: ''
   });
-  
   const [toothStates, setToothStates] = useState<ToothState>({});
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [notes, setNotes] = useState<NotesType>({
     chiefComplaint: '',
     clinicalNotes: '',
-    treatmentNotes: '',
+    treatmentNotes: ''
   });
-  
   const [files, setFiles] = useState<FileCategories>({
     personal: [],
     diagnostics: [],
     treatment: [],
-    xrays: [],
+    xrays: []
   });
-
   const [payments, setPayments] = useState<Payment[]>([]);
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
-
   const [showRecords, setShowRecords] = useState(false);
-
   const savePatientRecord = async () => {
     if (!user) {
       toast({
@@ -55,7 +58,6 @@ export function DentalManagement() {
       });
       return;
     }
-
     if (!patientInfo.name.trim()) {
       toast({
         title: "Missing Information",
@@ -64,7 +66,6 @@ export function DentalManagement() {
       });
       return;
     }
-
     try {
       const record = {
         patient: patientInfo,
@@ -72,18 +73,15 @@ export function DentalManagement() {
         treatments,
         notes,
         files,
-        payments,
+        payments
       };
-
       const savedId = await savePatient(record, currentRecordId || undefined);
-      
       if (!currentRecordId) {
         setCurrentRecordId(savedId);
       }
-      
       toast({
         title: "Record Saved",
-        description: `Patient record for ${patientInfo.name} has been ${currentRecordId ? 'updated' : 'saved'} successfully.`,
+        description: `Patient record for ${patientInfo.name} has been ${currentRecordId ? 'updated' : 'saved'} successfully.`
       });
     } catch (error) {
       toast({
@@ -93,72 +91,62 @@ export function DentalManagement() {
       });
     }
   };
-
   const clearForm = () => {
-    setPatientInfo({ name: '', age: null, dob: '', phone: '', email: '' });
+    setPatientInfo({
+      name: '',
+      age: null,
+      dob: '',
+      phone: '',
+      email: ''
+    });
     setToothStates({});
     setTreatments([]);
-    setNotes({ chiefComplaint: '', clinicalNotes: '', treatmentNotes: '' });
-    setFiles({ personal: [], diagnostics: [], treatment: [], xrays: [] });
+    setNotes({
+      chiefComplaint: '',
+      clinicalNotes: '',
+      treatmentNotes: ''
+    });
+    setFiles({
+      personal: [],
+      diagnostics: [],
+      treatment: [],
+      xrays: []
+    });
     setPayments([]);
     setSelectedTooth(null);
     setCurrentRecordId(null);
-    
     toast({
       title: "Form Cleared",
-      description: "All form data has been cleared.",
+      description: "All form data has been cleared."
     });
   };
-
-  return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8 relative">
+  return <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8 relative">
       <div className="container mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="glass-card rounded-2xl text-center p-4 sm:p-6 animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text mb-2 text-slate-50 lg:text-5xl">
             🦷 Dental Patient Management
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
         </div>
 
         {/* Patient Information */}
-        <PatientForm 
-          patientInfo={patientInfo}
-          onPatientInfoChange={setPatientInfo}
-        />
+        <PatientForm patientInfo={patientInfo} onPatientInfoChange={setPatientInfo} />
 
         {/* Dental Chart */}
-        <DentalChart
-          selectedTooth={selectedTooth}
-          toothStates={toothStates}
-          patientAge={patientInfo.age}
-          onToothSelect={setSelectedTooth}
-          onToothStateChange={setToothStates}
-        />
+        <DentalChart selectedTooth={selectedTooth} toothStates={toothStates} patientAge={patientInfo.age} onToothSelect={setSelectedTooth} onToothStateChange={setToothStates} />
 
         {/* Treatment Planning */}
-        <TreatmentPlanning
-          treatments={treatments}
-          selectedTooth={selectedTooth}
-          toothStates={toothStates}
-          onTreatmentsChange={setTreatments}
-        />
+        <TreatmentPlanning treatments={treatments} selectedTooth={selectedTooth} toothStates={toothStates} onTreatmentsChange={setTreatments} />
 
         {/* File Upload */}
-        <FileUpload
-          files={files}
-          onFilesChange={setFiles}
-          patientId={currentRecordId || undefined}
-        />
+        <FileUpload files={files} onFilesChange={setFiles} patientId={currentRecordId || undefined} />
 
         {/* Payments */}
         <PaymentSection payments={payments} onChange={setPayments} />
 
         {/* Clinical Notes */}
-        <ClinicalNotes
-          notes={notes}
-          onNotesChange={setNotes}
-        />
+        <ClinicalNotes notes={notes} onNotesChange={setNotes} />
 
         {/* Action Buttons */}
         <div className="glass-card rounded-2xl p-4 sm:p-6">
@@ -166,47 +154,30 @@ export function DentalManagement() {
             <Button variant="outline" onClick={clearForm} className="w-full sm:w-auto glass-button">
               Clear Form
             </Button>
-            <Button 
-              variant="secondary"
-              onClick={() => setShowRecords(!showRecords)}
-              className="w-full sm:w-auto glass-button"
-            >
+            <Button variant="secondary" onClick={() => setShowRecords(!showRecords)} className="w-full sm:w-auto glass-button">
               {showRecords ? 'Hide' : 'Show'} Patient Records
             </Button>
-            <Button 
-              onClick={savePatientRecord} 
-              className="w-full sm:w-auto glass-button bg-gradient-to-r from-primary to-accent hover:opacity-90"
-              disabled={loading}
-            >
+            <Button onClick={savePatientRecord} className="w-full sm:w-auto glass-button bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
               💾 {loading ? 'Saving...' : 'Save Patient Record'}
             </Button>
           </div>
         </div>
 
         {/* Patient Records */}
-        {showRecords && (
-          <PatientRecords
-            patients={patients}
-            loading={loading}
-            onLoadPatient={(record) => {
-              setPatientInfo(record.patient);
-              setToothStates(record.teeth);
-              setTreatments(record.treatments);
-              setNotes(record.notes);
-              setFiles(record.files);
-              setPayments(record.payments || []);
-              setSelectedTooth(null);
-              setCurrentRecordId(record.id);
-              
-              toast({
-                title: "Patient Loaded",
-                description: `Loaded record for ${record.patient.name}`,
-              });
-            }}
-            onDeletePatient={deletePatient}
-          />
-        )}
+        {showRecords && <PatientRecords patients={patients} loading={loading} onLoadPatient={record => {
+        setPatientInfo(record.patient);
+        setToothStates(record.teeth);
+        setTreatments(record.treatments);
+        setNotes(record.notes);
+        setFiles(record.files);
+        setPayments(record.payments || []);
+        setSelectedTooth(null);
+        setCurrentRecordId(record.id);
+        toast({
+          title: "Patient Loaded",
+          description: `Loaded record for ${record.patient.name}`
+        });
+      }} onDeletePatient={deletePatient} />}
       </div>
-    </div>
-  );
+    </div>;
 }
