@@ -223,19 +223,23 @@ All colors MUST be HSL for proper theming support.
     height: 200%;
     background: radial-gradient(
       circle at 30% 50%,
-      hsla(210 85% 65% / 0.15) 0%,
+      hsla(210 85% 65% / 0.35) 0%,
+      hsla(210 85% 65% / 0.15) 25%,
       transparent 50%
     ),
     radial-gradient(
       circle at 70% 80%,
-      hsla(270 75% 65% / 0.1) 0%,
+      hsla(270 75% 65% / 0.28) 0%,
+      hsla(270 75% 65% / 0.12) 25%,
       transparent 50%
     ),
     radial-gradient(
       circle at 50% 20%,
-      hsla(195 85% 55% / 0.12) 0%,
+      hsla(195 85% 55% / 0.32) 0%,
+      hsla(195 85% 55% / 0.14) 25%,
       transparent 50%
     );
+    filter: blur(60px);
     animation: floatUp 18s ease-in-out infinite;
   }
 }
