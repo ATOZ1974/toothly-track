@@ -32,10 +32,8 @@ export function usePatients() {
 
       // Transform database data to PatientRecord format
       const records: PatientRecord[] = (patientsData || []).map(patient => {
-        const dentalRecords = (patient.dental_records || []) as any[];
-        const dentalRecord = dentalRecords
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-        const treatments = (dentalRecord?.treatments || []) as any[];
+        const dentalRecord = patient.dental_records?.[0];
+        const treatments = dentalRecord?.treatments || [];
         const files = patient.patient_files || [];
         const payments = patient.payments || [];
 
