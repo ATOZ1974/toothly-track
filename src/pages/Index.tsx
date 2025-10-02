@@ -1,10 +1,12 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { DentalManagement } from '@/components/dental/DentalManagement';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen relative">
@@ -18,15 +20,26 @@ const Index = () => {
                 Welcome, {user?.user_metadata?.full_name || user?.email}
               </span>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={signOut}
-              className="w-full sm:w-auto glass-button"
-              size="sm"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/analytics')}
+                className="w-full sm:w-auto glass-button"
+                size="sm"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={signOut}
+                className="w-full sm:w-auto glass-button"
+                size="sm"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>

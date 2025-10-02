@@ -1,0 +1,38 @@
+{
+  "name": "Toothly - Dental Practice Management",
+  "short_name": "Toothly",
+  "description": "Advanced dental practice management system with 3D charting and analytics",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "productivity"],
+  "shortcuts": [
+    {
+      "name": "New Patient",
+      "url": "/?action=new-patient",
+      "description": "Add a new patient record"
+    },
+    {
+      "name": "Analytics",
+      "url": "/analytics",
+      "description": "View practice analytics"
+    }
+  ],
+  "screenshots": []
+}

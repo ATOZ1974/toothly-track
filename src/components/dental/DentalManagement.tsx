@@ -6,12 +6,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePatients } from '@/hooks/usePatients';
 import { PatientForm } from './PatientForm';
 import { DentalChart } from './DentalChart';
+import { DentalChart3D } from './DentalChart3D';
 import { TreatmentPlanning } from './TreatmentPlanning';
 import { FileUpload } from './FileUpload';
 import { ClinicalNotes } from './ClinicalNotes';
 import { PatientRecords } from './PatientRecords';
 import { PaymentSection } from './PaymentSection';
-import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories, Payment } from '@/types/dental';
+import { Badge } from '@/components/ui/badge';
+import { useOfflineStorage } from '@/hooks/useOfflineStorage';
+import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories, Payment, ToothStatus } from '@/types/dental';
 export function DentalManagement() {
   const {
     toast
@@ -49,6 +52,8 @@ export function DentalManagement() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [showRecords, setShowRecords] = useState(false);
+  const [use3DChart, setUse3DChart] = useState(false);
+  const { isOnline, pendingSync } = useOfflineStorage();
   const savePatientRecord = async () => {
     if (!user) {
       toast({
@@ -130,11 +135,50 @@ export function DentalManagement() {
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
         </div>
 
+        {/* Offline/Online Status */}
+        {!isOnline && (
+          <div className="glass-card rounded-2xl p-4 bg-yellow-500/10 border-yellow-500/20">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              ⚠️ You're offline. Changes will be saved locally and synced when connection is restored.
+              {pendingSync > 0 && ` (${pendingSync} items pending sync)`}
+            </p>
+          </div>
+        )}
+
         {/* Patient Information */}
         <PatientForm patientInfo={patientInfo} onPatientInfoChange={setPatientInfo} />
 
+        {/* Dental Chart Toggle */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => setUse3DChart(!use3DChart)}
+            className="glass-button"
+          >
+            {use3DChart ? '📊 Switch to 2D Chart' : '🎮 Switch to 3D Chart'}
+          </Button>
+        </div>
+
         {/* Dental Chart */}
-        <DentalChart selectedTooth={selectedTooth} toothStates={toothStates} patientAge={patientInfo.age} onToothSelect={setSelectedTooth} onToothStateChange={setToothStates} />
+        {use3DChart ? (
+          <DentalChart3D 
+            selectedTooth={selectedTooth} 
+            toothStates={toothStates} 
+            patientAge={patientInfo.age} 
+            onToothSelect={setSelectedTooth}
+            onToothStateChange={(tooth: number, state: ToothStatus) => {
+              setToothStates(prev => ({ ...prev, [tooth]: state }));
+            }}
+          />
+        ) : (
+          <DentalChart 
+            selectedTooth={selectedTooth} 
+            toothStates={toothStates} 
+            patientAge={patientInfo.age} 
+            onToothSelect={setSelectedTooth} 
+            onToothStateChange={setToothStates} 
+          />
+        )}
 
         {/* Treatment Planning */}
         <TreatmentPlanning treatments={treatments} selectedTooth={selectedTooth} toothStates={toothStates} onTreatmentsChange={setTreatments} />
