@@ -152,23 +152,48 @@ export function usePatients() {
         patientData = data;
       }
 
-      // Save or update dental record
-      const { data: dentalRecordData, error: dentalRecordError } = await supabase
+      // Check if dental record exists
+      const { data: existingDentalRecord } = await supabase
         .from('dental_records')
-        .upsert({
-          patient_id: patientData.id,
-          tooth_states: record.teeth as any,
-          chief_complaint: record.notes.chiefComplaint,
-          clinical_notes: record.notes.clinicalNotes,
-          treatment_notes: record.notes.treatmentNotes,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'patient_id'
-        })
-        .select()
+        .select('id')
+        .eq('patient_id', patientData.id)
         .single();
 
-      if (dentalRecordError) throw dentalRecordError;
+      let dentalRecordData;
+      if (existingDentalRecord) {
+        // Update existing dental record
+        const { data, error: dentalRecordError } = await supabase
+          .from('dental_records')
+          .update({
+            tooth_states: record.teeth as any,
+            chief_complaint: record.notes.chiefComplaint,
+            clinical_notes: record.notes.clinicalNotes,
+            treatment_notes: record.notes.treatmentNotes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingDentalRecord.id)
+          .select()
+          .single();
+
+        if (dentalRecordError) throw dentalRecordError;
+        dentalRecordData = data;
+      } else {
+        // Create new dental record
+        const { data, error: dentalRecordError } = await supabase
+          .from('dental_records')
+          .insert({
+            patient_id: patientData.id,
+            tooth_states: record.teeth as any,
+            chief_complaint: record.notes.chiefComplaint,
+            clinical_notes: record.notes.clinicalNotes,
+            treatment_notes: record.notes.treatmentNotes,
+          })
+          .select()
+          .single();
+
+        if (dentalRecordError) throw dentalRecordError;
+        dentalRecordData = data;
+      }
 
       // Save treatments
       if (record.treatments.length > 0) {
