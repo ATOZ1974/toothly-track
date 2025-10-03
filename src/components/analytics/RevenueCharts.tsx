@@ -62,7 +62,7 @@ export function RevenueCharts({ revenueData, paymentMethods, topTreatments, load
               />
               <YAxis className="text-xs" />
               <Tooltip 
-                formatter={(value: any) => [`$${value.toFixed(2)}`, 'Revenue']}
+                formatter={(value: any) => [`RS ${value.toFixed(2)}`, 'Revenue']}
                 labelFormatter={(date) => new Date(date).toLocaleDateString()}
               />
               <Legend />
@@ -92,7 +92,7 @@ export function RevenueCharts({ revenueData, paymentMethods, topTreatments, load
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ method, amount }) => `${method}: $${amount.toFixed(0)}`}
+                label={({ method, amount }) => `${method}: RS ${amount.toFixed(0)}`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="amount"
@@ -101,7 +101,7 @@ export function RevenueCharts({ revenueData, paymentMethods, topTreatments, load
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: any) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value: any) => `RS ${value.toFixed(2)}`} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -110,7 +110,7 @@ export function RevenueCharts({ revenueData, paymentMethods, topTreatments, load
       {/* Top Treatments by Revenue */}
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Top Treatments by Revenue</CardTitle>
+          <CardTitle>Top Treatments by Count</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -118,9 +118,8 @@ export function RevenueCharts({ revenueData, paymentMethods, topTreatments, load
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="name" className="text-xs" angle={-45} textAnchor="end" height={100} />
               <YAxis className="text-xs" />
-              <Tooltip formatter={(value: any) => [`$${value.toFixed(2)}`, 'Revenue']} />
+              <Tooltip formatter={(value: any) => [`${value}`, 'Count']} />
               <Legend />
-              <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
               <Bar dataKey="count" fill="#3b82f6" name="Count" />
             </BarChart>
           </ResponsiveContainer>

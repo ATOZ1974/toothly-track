@@ -50,13 +50,13 @@ export function ReportExport({
     yPos += 10;
 
     doc.setFontSize(11);
-    doc.text(`Total Revenue: $${summary.totalRevenue.toFixed(2)}`, 20, yPos);
+    doc.text(`Total Revenue: RS ${summary.totalRevenue.toFixed(2)}`, 20, yPos);
     yPos += 7;
     doc.text(`Total Patients: ${summary.totalPatients}`, 20, yPos);
     yPos += 7;
     doc.text(`Total Treatments: ${summary.totalTreatments}`, 20, yPos);
     yPos += 7;
-    doc.text(`Average Treatment Value: $${summary.avgTreatmentValue.toFixed(2)}`, 20, yPos);
+    doc.text(`Average Treatment Value: RS ${summary.avgTreatmentValue.toFixed(2)}`, 20, yPos);
     yPos += 15;
 
     // Payment Methods
@@ -66,7 +66,7 @@ export function ReportExport({
 
     doc.setFontSize(11);
     paymentMethods.forEach((method) => {
-      doc.text(`${method.method}: $${method.amount.toFixed(2)} (${method.count} transactions)`, 20, yPos);
+      doc.text(`${method.method}: RS ${method.amount.toFixed(2)} (${method.count} transactions)`, 20, yPos);
       yPos += 7;
     });
     yPos += 10;
@@ -87,7 +87,7 @@ export function ReportExport({
         doc.addPage();
         yPos = 20;
       }
-      doc.text(`${treatment.name}: $${treatment.revenue.toFixed(2)} (${treatment.count} treatments)`, 20, yPos);
+      doc.text(`${treatment.name}: RS ${treatment.revenue.toFixed(2)} (${treatment.count} treatments)`, 20, yPos);
       yPos += 7;
     });
 
@@ -113,7 +113,7 @@ export function ReportExport({
               <span className="font-medium">Period:</span> {format(startDate, 'MMM dd, yyyy')} - {format(endDate, 'MMM dd, yyyy')}
             </p>
             <p className="text-sm">
-              <span className="font-medium">Total Revenue:</span> ${summary.totalRevenue.toFixed(2)}
+              <span className="font-medium">Total Revenue:</span> RS {summary.totalRevenue.toFixed(2)}
             </p>
             <p className="text-sm">
               <span className="font-medium">Total Treatments:</span> {summary.totalTreatments}

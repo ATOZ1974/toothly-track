@@ -12,7 +12,7 @@ export function KPICards({ summary, loading }: KPICardsProps) {
   const kpis = [
     {
       title: 'Total Revenue',
-      value: `$${summary.totalRevenue.toFixed(2)}`,
+      value: `RS ${summary.totalRevenue.toFixed(2)}`,
       icon: DollarSign,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
@@ -33,7 +33,7 @@ export function KPICards({ summary, loading }: KPICardsProps) {
     },
     {
       title: 'Avg Treatment Value',
-      value: `$${summary.avgTreatmentValue.toFixed(2)}`,
+      value: `RS ${summary.avgTreatmentValue.toFixed(2)}`,
       icon: TrendingUp,
       color: 'text-orange-500',
       bgColor: 'bg-orange-500/10',
