@@ -37,6 +37,18 @@ export function usePatients() {
         const files = patient.patient_files || [];
         const payments = patient.payments || [];
 
+        console.log(`Loading patient ${patient.name}:`, {
+          teeth: dentalRecord?.tooth_states,
+          treatments: treatments.length,
+          files: files.length,
+          payments: payments.length,
+          notes: {
+            chief_complaint: dentalRecord?.chief_complaint,
+            clinical_notes: dentalRecord?.clinical_notes,
+            treatment_notes: dentalRecord?.treatment_notes
+          }
+        });
+
         // Group files by category
         return {
           id: patient.id,
@@ -110,6 +122,24 @@ export function usePatients() {
 
   const savePatient = async (record: Omit<PatientRecord, 'id' | 'savedAt'>, existingId?: string) => {
     if (!user) throw new Error('User not authenticated');
+
+    console.log('Saving patient record:', {
+      patient: record.patient.name,
+      teeth: Object.keys(record.teeth).length,
+      treatments: record.treatments.length,
+      files: {
+        personal: record.files.personal.length,
+        diagnostics: record.files.diagnostics.length,
+        treatment: record.files.treatment.length,
+        xrays: record.files.xrays.length
+      },
+      payments: record.payments?.length || 0,
+      notes: {
+        chiefComplaint: record.notes.chiefComplaint?.substring(0, 50) || '(empty)',
+        clinicalNotes: record.notes.clinicalNotes?.substring(0, 50) || '(empty)',
+        treatmentNotes: record.notes.treatmentNotes?.substring(0, 50) || '(empty)'
+      }
+    });
 
     try {
       let patientData;

@@ -209,6 +209,15 @@ export function DentalManagement() {
 
         {/* Patient Records */}
         {showRecords && <PatientRecords patients={patients} loading={loading} onLoadPatient={record => {
+        console.log('Loading patient record into form:', {
+          patient: record.patient,
+          teeth: record.teeth,
+          treatments: record.treatments,
+          notes: record.notes,
+          files: record.files,
+          payments: record.payments
+        });
+        
         setPatientInfo(record.patient);
         setToothStates(record.teeth);
         setTreatments(record.treatments);
@@ -224,7 +233,7 @@ export function DentalManagement() {
         
         toast({
           title: "Patient Loaded",
-          description: `Loaded record for ${record.patient.name} - All data including dental chart, treatments, files, and notes have been loaded.`
+          description: `Loaded ${record.patient.name} - ${Object.keys(record.teeth).length} teeth, ${record.treatments.length} treatments, ${record.notes.chiefComplaint ? 'notes' : 'no notes'}`
         });
       }} onDeletePatient={deletePatient} />}
       </div>
