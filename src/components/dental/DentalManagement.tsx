@@ -217,9 +217,14 @@ export function DentalManagement() {
         setPayments(record.payments || []);
         setSelectedTooth(null);
         setCurrentRecordId(record.id);
+        setShowRecords(false); // Hide records after loading
+        
+        // Scroll to top to show loaded data
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
         toast({
           title: "Patient Loaded",
-          description: `Loaded record for ${record.patient.name}`
+          description: `Loaded record for ${record.patient.name} - All data including dental chart, treatments, files, and notes have been loaded.`
         });
       }} onDeletePatient={deletePatient} />}
       </div>
