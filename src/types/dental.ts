@@ -11,6 +11,8 @@ export interface Treatment {
   name: string;
   tooth?: number | null;
   category: 'basic' | 'advanced';
+  status?: 'planned' | 'completed';
+  cost?: number | null;
 }
 
 export interface ToothState {

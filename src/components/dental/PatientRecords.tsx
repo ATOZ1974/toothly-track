@@ -68,111 +68,353 @@ export function PatientRecords({ patients, loading, onLoadPatient, onDeletePatie
         // We use current y position variable instead
       };
 
-      // Title
-      doc.setFontSize(20);
+      // Professional Header with Practice Name
+      doc.setFillColor(41, 128, 185); // Professional blue
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
       doc.setFont(undefined, 'bold');
-      doc.text('Dental Patient Record', 14, 20);
+      doc.text('DENTAL PATIENT RECORD', 105, 15, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Generated: ${formatDate(new Date().toISOString())}`, 105, 25, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      let yPos = 45;
 
-      let yPos = 30;
-
-      // Patient Information
+      // Patient Information Section with Box
+      doc.setDrawColor(41, 128, 185);
+      doc.setLineWidth(0.5);
+      doc.line(14, yPos, 196, yPos); // Top line
+      
+      yPos += 5;
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text('Patient Information', 14, yPos);
-      yPos += 10;
+      doc.setTextColor(41, 128, 185);
+      doc.text('PATIENT INFORMATION', 14, yPos);
+      yPos += 2;
+      doc.line(14, yPos, 196, yPos);
+      yPos += 8;
 
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text(`Name: ${record.patient.name || 'N/A'}`, 14, yPos); yPos += 7;
-      doc.text(`Age: ${record.patient.age ?? 'N/A'}`, 14, yPos); yPos += 7;
-      doc.text(`Date of Birth: ${record.patient.dob || 'N/A'}`, 14, yPos); yPos += 7;
-      doc.text(`Phone: ${record.patient.phone || 'N/A'}`, 14, yPos); yPos += 7;
-      doc.text(`Email: ${record.patient.email || 'N/A'}`, 14, yPos); yPos += 12;
+      doc.setTextColor(0, 0, 0);
+      
+      // Two column layout for patient info
+      doc.setFont(undefined, 'bold');
+      doc.text('Name:', 14, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(record.patient.name || 'N/A', 40, yPos);
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Age:', 120, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(String(record.patient.age ?? 'N/A'), 135, yPos);
+      yPos += 7;
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Date of Birth:', 14, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(record.patient.dob || 'N/A', 40, yPos);
+      yPos += 7;
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Phone:', 14, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(record.patient.phone || 'N/A', 40, yPos);
+      yPos += 7;
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Email:', 14, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(record.patient.email || 'N/A', 40, yPos);
+      yPos += 15;
 
-      // Dental Status Summary
+      // Dental Status Summary Section
       const statusCounts = getStatusCounts(record);
+      doc.setDrawColor(41, 128, 185);
+      doc.line(14, yPos, 196, yPos);
+      yPos += 5;
+      
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text('Dental Status Summary', 14, yPos);
-      yPos += 10;
+      doc.setTextColor(41, 128, 185);
+      doc.text('DENTAL STATUS OVERVIEW', 14, yPos);
+      yPos += 2;
+      doc.line(14, yPos, 196, yPos);
+      yPos += 8;
 
       doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Healthy Teeth: ${statusCounts.healthy}`, 14, yPos); yPos += 7;
-      doc.text(`Problem Teeth: ${statusCounts.problem}`, 14, yPos); yPos += 7;
-      doc.text(`Treated Teeth: ${statusCounts.treated}`, 14, yPos); yPos += 7;
-      doc.text(`Missing Teeth: ${statusCounts.missing}`, 14, yPos); yPos += 12;
-
-      // Clinical Notes
-      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      
+      // Status boxes
+      const boxWidth = 44;
+      const boxHeight = 20;
+      const startX = 14;
+      const gap = 2;
+      
+      // Healthy
+      doc.setFillColor(34, 197, 94);
+      doc.roundedRect(startX, yPos, boxWidth, boxHeight, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
       doc.setFont(undefined, 'bold');
-      doc.text('Clinical Notes', 14, yPos);
-      yPos += 10;
-
+      doc.text('HEALTHY', startX + boxWidth/2, yPos + 8, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text(String(statusCounts.healthy), startX + boxWidth/2, yPos + 16, { align: 'center' });
+      
+      // Problem
+      doc.setFillColor(239, 68, 68);
+      doc.roundedRect(startX + boxWidth + gap, yPos, boxWidth, boxHeight, 2, 2, 'F');
       doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
+      doc.text('PROBLEM', startX + boxWidth + gap + boxWidth/2, yPos + 8, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text(String(statusCounts.problem), startX + boxWidth + gap + boxWidth/2, yPos + 16, { align: 'center' });
+      
+      // Treated
+      doc.setFillColor(59, 130, 246);
+      doc.roundedRect(startX + (boxWidth + gap) * 2, yPos, boxWidth, boxHeight, 2, 2, 'F');
+      doc.setFontSize(11);
+      doc.text('TREATED', startX + (boxWidth + gap) * 2 + boxWidth/2, yPos + 8, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text(String(statusCounts.treated), startX + (boxWidth + gap) * 2 + boxWidth/2, yPos + 16, { align: 'center' });
+      
+      // Missing
+      doc.setFillColor(107, 114, 128);
+      doc.roundedRect(startX + (boxWidth + gap) * 3, yPos, boxWidth, boxHeight, 2, 2, 'F');
+      doc.setFontSize(11);
+      doc.text('MISSING', startX + (boxWidth + gap) * 3 + boxWidth/2, yPos + 8, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text(String(statusCounts.missing), startX + (boxWidth + gap) * 3 + boxWidth/2, yPos + 16, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      yPos += boxHeight + 15;
 
-      if (record.notes.chiefComplaint) {
-        doc.text('Chief Complaint:', 14, yPos); yPos += 7;
-        const complaintLines = doc.splitTextToSize(record.notes.chiefComplaint, 180);
-        doc.text(complaintLines, 14, yPos);
-        yPos += (complaintLines.length * 5) + 5;
+      // Clinical Notes & History Section
+      if (record.notes.chiefComplaint || record.notes.clinicalNotes || record.notes.treatmentNotes) {
+        if (yPos > 240) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setDrawColor(41, 128, 185);
+        doc.line(14, yPos, 196, yPos);
+        yPos += 5;
+        
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('CLINICAL NOTES & HISTORY', 14, yPos);
+        yPos += 2;
+        doc.line(14, yPos, 196, yPos);
+        yPos += 8;
+
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+
+        if (record.notes.chiefComplaint) {
+          doc.setFillColor(245, 245, 245);
+          const complaintLines = doc.splitTextToSize(record.notes.chiefComplaint, 175);
+          const boxHeight = (complaintLines.length * 5) + 10;
+          doc.roundedRect(14, yPos, 182, boxHeight, 2, 2, 'F');
+          
+          doc.setFont(undefined, 'bold');
+          doc.text('Chief Complaint:', 18, yPos + 6);
+          doc.setFont(undefined, 'normal');
+          doc.text(complaintLines, 18, yPos + 12);
+          yPos += boxHeight + 5;
+        }
+
+        if (record.notes.clinicalNotes) {
+          if (yPos > 250) { doc.addPage(); yPos = 20; }
+          doc.setFillColor(245, 245, 245);
+          const clinicalLines = doc.splitTextToSize(record.notes.clinicalNotes, 175);
+          const boxHeight = (clinicalLines.length * 5) + 10;
+          doc.roundedRect(14, yPos, 182, boxHeight, 2, 2, 'F');
+          
+          doc.setFont(undefined, 'bold');
+          doc.text('Clinical Notes:', 18, yPos + 6);
+          doc.setFont(undefined, 'normal');
+          doc.text(clinicalLines, 18, yPos + 12);
+          yPos += boxHeight + 5;
+        }
+
+        if (record.notes.treatmentNotes) {
+          if (yPos > 250) { doc.addPage(); yPos = 20; }
+          doc.setFillColor(245, 245, 245);
+          const treatmentLines = doc.splitTextToSize(record.notes.treatmentNotes, 175);
+          const boxHeight = (treatmentLines.length * 5) + 10;
+          doc.roundedRect(14, yPos, 182, boxHeight, 2, 2, 'F');
+          
+          doc.setFont(undefined, 'bold');
+          doc.text('Treatment Notes:', 18, yPos + 6);
+          doc.setFont(undefined, 'normal');
+          doc.text(treatmentLines, 18, yPos + 12);
+          yPos += boxHeight + 5;
+        }
+        
+        yPos += 10;
       }
 
-      if (record.notes.clinicalNotes) {
-        doc.text('Clinical Notes:', 14, yPos); yPos += 7;
-        const clinicalLines = doc.splitTextToSize(record.notes.clinicalNotes, 180);
-        doc.text(clinicalLines, 14, yPos);
-        yPos += (clinicalLines.length * 5) + 5;
-      }
-
-      if (record.notes.treatmentNotes) {
-        doc.text('Treatment Notes:', 14, yPos); yPos += 7;
-        const treatmentLines = doc.splitTextToSize(record.notes.treatmentNotes, 180);
-        doc.text(treatmentLines, 14, yPos);
-        yPos += (treatmentLines.length * 5) + 5;
-      }
-
-      // Treatments
+      // Treatments Section with Status
       if (record.treatments && record.treatments.length > 0) {
+        if (yPos > 220) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setDrawColor(41, 128, 185);
+        doc.line(14, yPos, 196, yPos);
         yPos += 5;
+        
         doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
-        doc.text('Treatment Plan', 14, yPos);
+        doc.setTextColor(41, 128, 185);
+        doc.text('TREATMENT DETAILS', 14, yPos);
+        yPos += 2;
+        doc.line(14, yPos, 196, yPos);
         yPos += 10;
 
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
-        record.treatments.forEach((treatment, index) => {
-          const treatmentText = `${index + 1}. ${treatment.name}${treatment.tooth ? ` (Tooth ${treatment.tooth})` : ''}`;
-          doc.text(treatmentText, 14, yPos);
-          yPos += 7;
-        });
-        yPos += 5;
+        doc.setTextColor(0, 0, 0);
+        
+        // Separate completed and planned treatments
+        const completedTreatments = record.treatments.filter(t => t.status === 'completed');
+        const plannedTreatments = record.treatments.filter(t => t.status !== 'completed');
+        
+        // Completed Treatments
+        if (completedTreatments.length > 0) {
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(34, 197, 94);
+          doc.text('✓ Completed Treatments', 14, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          completedTreatments.forEach((treatment, index) => {
+            if (yPos > 270) { doc.addPage(); yPos = 20; }
+            
+            doc.setFillColor(240, 253, 244);
+            doc.roundedRect(14, yPos - 4, 182, 10, 1, 1, 'F');
+            
+            doc.setFont(undefined, 'bold');
+            const treatmentText = `${index + 1}. ${treatment.name}`;
+            doc.text(treatmentText, 18, yPos + 2);
+            
+            doc.setFont(undefined, 'normal');
+            if (treatment.tooth) {
+              doc.text(`Tooth #${treatment.tooth}`, 120, yPos + 2);
+            }
+            if (treatment.cost) {
+              doc.text(`RS ${Number(treatment.cost).toFixed(2)}`, 160, yPos + 2);
+            }
+            
+            yPos += 12;
+          });
+          yPos += 5;
+        }
+        
+        // Planned Treatments
+        if (plannedTreatments.length > 0) {
+          if (yPos > 250) { doc.addPage(); yPos = 20; }
+          
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(234, 179, 8);
+          doc.text('⏳ Planned Treatments', 14, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          plannedTreatments.forEach((treatment, index) => {
+            if (yPos > 270) { doc.addPage(); yPos = 20; }
+            
+            doc.setFillColor(254, 252, 232);
+            doc.roundedRect(14, yPos - 4, 182, 10, 1, 1, 'F');
+            
+            doc.setFont(undefined, 'bold');
+            const treatmentText = `${index + 1}. ${treatment.name}`;
+            doc.text(treatmentText, 18, yPos + 2);
+            
+            doc.setFont(undefined, 'normal');
+            if (treatment.tooth) {
+              doc.text(`Tooth #${treatment.tooth}`, 120, yPos + 2);
+            }
+            if (treatment.cost) {
+              doc.text(`RS ${Number(treatment.cost).toFixed(2)}`, 160, yPos + 2);
+            }
+            
+            yPos += 12;
+          });
+          yPos += 5;
+        }
+        
+        yPos += 10;
       }
 
-      // Payments
+      // Payments Section
       if (record.payments && record.payments.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setDrawColor(41, 128, 185);
+        doc.line(14, yPos, 196, yPos);
+        yPos += 5;
+        
         doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
-        doc.text('Payments', 14, yPos);
+        doc.setTextColor(41, 128, 185);
+        doc.text('PAYMENT HISTORY', 14, yPos);
+        yPos += 2;
+        doc.line(14, yPos, 196, yPos);
         yPos += 10;
 
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        
         let total = 0;
         record.payments.forEach((p, idx) => {
-          const line = `${idx + 1}. ${formatDate(p.paidAt)} • ${p.method.toUpperCase()} • ₹${p.amount.toFixed(2)}${p.notes ? ` • ${p.notes}` : ''}`;
           if (yPos > 270) { doc.addPage(); yPos = 20; }
-          doc.text(line, 14, yPos);
-          yPos += 7;
+          
+          // Alternating row colors
+          if (idx % 2 === 0) {
+            doc.setFillColor(249, 250, 251);
+            doc.rect(14, yPos - 4, 182, 10, 'F');
+          }
+          
+          doc.setFont(undefined, 'normal');
+          doc.text(`${idx + 1}.`, 18, yPos + 2);
+          doc.text(formatDate(p.paidAt), 25, yPos + 2);
+          doc.text(p.method.toUpperCase(), 90, yPos + 2);
+          
+          doc.setFont(undefined, 'bold');
+          doc.text(`RS ${p.amount.toFixed(2)}`, 140, yPos + 2);
+          
+          if (p.notes) {
+            doc.setFont(undefined, 'italic');
+            doc.setFontSize(8);
+            doc.text(p.notes.substring(0, 40), 25, yPos + 7);
+            doc.setFontSize(10);
+          }
+          
+          yPos += 12;
           total += p.amount;
         });
-        if (yPos > 270) { doc.addPage(); yPos = 20; }
+        
+        if (yPos > 260) { doc.addPage(); yPos = 20; }
+        
+        // Total with highlight
+        doc.setFillColor(41, 128, 185);
+        doc.roundedRect(14, yPos, 182, 12, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
-        doc.text(`Total: ₹${total.toFixed(2)}`, 14, yPos);
-        doc.setFont(undefined, 'normal');
-        yPos += 12;
+        doc.text(`TOTAL PAID: RS ${total.toFixed(2)}`, 105, yPos + 8, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
+        yPos += 20;
       }
 
       // Files & Images
@@ -238,10 +480,19 @@ export function PatientRecords({ patients, loading, onLoadPatient, onDeletePatie
         }
       });
 
-      // Footer
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'italic');
-      doc.text(`Generated on ${formatDate(record.savedAt)}`, 14, 280);
+      // Professional Footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFillColor(41, 128, 185);
+        doc.rect(0, 285, 210, 12, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Page ${i} of ${pageCount}`, 14, 291);
+        doc.text(`Record ID: ${record.id.substring(0, 8)}`, 105, 291, { align: 'center' });
+        doc.text(`Saved: ${formatDate(record.savedAt)}`, 196, 291, { align: 'right' });
+      }
 
       // Save PDF
       doc.save(`${safeName}_dental_record.pdf`);
