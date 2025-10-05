@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,7 +79,7 @@ export default function Auth() {
     }
   };
   return <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
-      <div className="glass-card w-full max-w-md mx-4 sm:mx-auto rounded-2xl animate-scale-in relative z-10">
+      <div className="glass-card w-full max-w-md mx-4 sm:mx-auto rounded-2xl animate-scale-in">
         <div className="text-center space-y-2 p-6 pb-4">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             🦷 Dental Patient Management

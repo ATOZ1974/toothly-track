@@ -99,10 +99,6 @@ export default {
           "0%": { transform: "scale(0.95)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
-        "scale-in-big": {
-          "0%": { transform: "scale(1.8)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "1" },
-        },
         "float": {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
@@ -117,7 +113,6 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
-        "scale-in-big": "scale-in-big 1s ease-out",
         "float": "float 6s ease-in-out infinite",
         "rotate-slow": "rotate-slow 20s linear infinite",
       },

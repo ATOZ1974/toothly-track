@@ -24,7 +24,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/analytics')}
-                className="w-full sm:w-auto glass-button hover-scale transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                className="w-full sm:w-auto glass-button"
                 size="sm"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -33,7 +33,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 onClick={signOut}
-                className="w-full sm:w-auto glass-button hover-scale transition-all duration-300 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                className="w-full sm:w-auto glass-button"
                 size="sm"
               >
                 <LogOut className="w-4 h-4 mr-2" />

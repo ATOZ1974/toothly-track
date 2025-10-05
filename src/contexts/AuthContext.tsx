@@ -33,53 +33,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // Handle token refresh errors
-        if (event === 'TOKEN_REFRESHED' && !session) {
-          // Token refresh failed, clear local session
-          setTimeout(() => {
-            supabase.auth.signOut({ scope: 'local' });
-          }, 0);
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          // Ensure local storage is cleared
-          setTimeout(() => {
-            supabase.auth.signOut({ scope: 'local' });
-          }, 0);
-        }
-        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    // Get initial session with error handling
-    supabase.auth.getSession()
-      .then(async ({ data: { session }, error }) => {
-        if (error) {
-          // Clear any stale tokens on error
-          console.error('Session error:', error);
-          await supabase.auth.signOut({ scope: 'local' });
-          setSession(null);
-          setUser(null);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
-          // Proactively clear any stale tokens to avoid refresh errors
-          if (!session) {
-            await supabase.auth.signOut({ scope: 'local' });
-          }
-        }
-        setLoading(false);
-      })
-      .catch(async (err) => {
-        console.error('Failed to get session:', err);
+    // Get initial session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      // Proactively clear any stale tokens to avoid refresh errors
+      if (!session) {
         await supabase.auth.signOut({ scope: 'local' });
-        setSession(null);
-        setUser(null);
-        setLoading(false);
-      });
+      }
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
