@@ -71,6 +71,24 @@ export function DentalManagement() {
       });
       return;
     }
+    
+    if (!patientInfo.phone.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter patient phone number before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (patientInfo.age === null || patientInfo.age <= 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a valid patient age before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
     try {
       const record = {
         patient: patientInfo,

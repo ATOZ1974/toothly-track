@@ -28,7 +28,7 @@ export function PatientForm({
           </div>
           
           <div>
-            <Label htmlFor="patientAge" className="text-sm font-medium">Age</Label>
+            <Label htmlFor="patientAge" className="text-sm font-medium">Age *</Label>
             <Input id="patientAge" type="number" value={patientInfo.age || ''} onChange={e => updateField('age', e.target.value ? parseInt(e.target.value) : null)} placeholder="Enter age" min="0" max="120" className="mt-2" />
           </div>
           
@@ -58,7 +58,7 @@ export function PatientForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div>
-            <Label htmlFor="patientPhone" className="text-sm font-medium">Phone Number</Label>
+            <Label htmlFor="patientPhone" className="text-sm font-medium">Phone Number *</Label>
             <Input id="patientPhone" type="tel" value={patientInfo.phone} onChange={e => updateField('phone', e.target.value)} placeholder="Enter phone number" className="mt-2" />
           </div>
           
