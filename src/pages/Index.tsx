@@ -21,8 +21,8 @@ const Index = () => {
     <div className="min-h-screen relative">
       {/* Welcome 3D Animation */}
       {showWelcome && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 animate-fade-in pointer-events-none">
-          <div className="w-full h-full max-w-2xl max-h-[500px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 pointer-events-none">
+          <div className="w-full h-full max-w-3xl max-h-[600px] animate-scale-in-big">
             <Scene3D enableControls>
               <Welcome3D userName={user?.user_metadata?.full_name || user?.email || 'Doctor'} />
             </Scene3D>
