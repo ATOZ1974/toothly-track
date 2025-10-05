@@ -3,32 +3,13 @@ import { DentalManagement } from '@/components/dental/DentalManagement';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Scene3D } from '@/components/3d/Scene3D';
-import { Welcome3D } from '@/components/3d/Welcome3D';
-import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [showWelcome, setShowWelcome] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowWelcome(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen relative">
-      {/* Welcome 3D Animation */}
-      {showWelcome && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 pointer-events-none">
-          <div className="w-full h-full max-w-3xl max-h-[600px] animate-scale-in-big">
-            <Scene3D enableControls>
-              <Welcome3D userName={user?.user_metadata?.full_name || user?.email || 'Doctor'} />
-            </Scene3D>
-          </div>
-        </div>
-      )}
       {/* Navigation Header */}
       <div className="glass-nav sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
