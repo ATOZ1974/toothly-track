@@ -242,4 +242,28 @@ All colors MUST be HSL for proper theming support.
     filter: blur(60px);
     animation: floatUp 18s ease-in-out infinite;
   }
+
+  /* Enhanced scrollbar styling for mobile accessibility */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 12px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 6px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 6px;
+    border: 2px solid hsl(var(--muted));
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary-glow));
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb:active {
+    background: hsl(var(--accent));
+  }
 }

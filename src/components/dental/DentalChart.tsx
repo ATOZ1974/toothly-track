@@ -103,28 +103,36 @@ export function DentalChart({
           {/* Upper Jaw */}
           <div className="text-center space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Upper Jaw</h3>
-            <div className="overflow-x-auto pb-2">
-              <div className="flex justify-center min-w-fit px-4">
-                <div className="grid gap-1 sm:gap-2" style={{
-                gridTemplateColumns: `repeat(${upperTeeth.length}, minmax(0, 1fr))`
+            <div className="relative">
+              <div className="overflow-x-auto pb-4 scroll-smooth touch-pan-x" style={{
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
               }}>
+                <div className="flex justify-center min-w-fit px-4 gap-2">
                   {upperTeeth.map(tooth => <ToothButton key={tooth} toothNumber={tooth} />)}
                 </div>
               </div>
+              <div className="absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none md:hidden" />
+              <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
             </div>
           </div>
 
           {/* Lower Jaw */}
           <div className="text-center space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Lower Jaw</h3>
-            <div className="overflow-x-auto pb-2">
-              <div className="flex justify-center min-w-fit px-4">
-                <div className="grid gap-1 sm:gap-2" style={{
-                gridTemplateColumns: `repeat(${lowerTeeth.length}, minmax(0, 1fr))`
+            <div className="relative">
+              <div className="overflow-x-auto pb-4 scroll-smooth touch-pan-x" style={{
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
               }}>
+                <div className="flex justify-center min-w-fit px-4 gap-2">
                   {lowerTeeth.map(tooth => <ToothButton key={tooth} toothNumber={tooth} />)}
                 </div>
               </div>
+              <div className="absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none md:hidden" />
+              <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
             </div>
           </div>
         </div>
