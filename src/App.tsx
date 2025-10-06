@@ -29,7 +29,7 @@ const AppContent = () => {
   return (
     <div className="relative min-h-screen">
       <div className="animated-bg" />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <Routes>
           <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
           <Route path="/" element={user ? <Index /> : <Navigate to="/auth" replace />} />
