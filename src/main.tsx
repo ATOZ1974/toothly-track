@@ -3,19 +3,13 @@ import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-// Register service worker for PWA
+// Disable and unregister any existing service workers to avoid caching dev bundles
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
-      (registration) => {
-        console.log('ServiceWorker registration successful:', registration.scope);
-      },
-      (error) => {
-        console.log('ServiceWorker registration failed:', error);
-      }
-    );
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((reg) => reg.unregister().catch(() => {}));
   });
 }
+
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
