@@ -40,13 +40,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      // Proactively clear any stale tokens to avoid refresh errors
-      if (!session) {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error);
+        // Clear stale session data on error
         await supabase.auth.signOut({ scope: 'local' });
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+        // Proactively clear any stale tokens to avoid refresh errors
+        if (!session) {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
       }
+      setLoading(false);
+    }).catch(async (err) => {
+      console.error('Session initialization error:', err);
+      await supabase.auth.signOut({ scope: 'local' });
+      setSession(null);
+      setUser(null);
       setLoading(false);
     });
 
