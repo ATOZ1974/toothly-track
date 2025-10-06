@@ -1,4 +1,4 @@
-const CACHE_NAME = 'toothly-v1';
+const CACHE_NAME = 'toothly-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -34,32 +34,34 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - serve from cache, fallback to network (skip Vite dev assets and non-GET)
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  const isDevAsset = url.pathname.startsWith('/@vite') || url.pathname.includes('/node_modules/.vite/') || url.pathname.startsWith('/src/');
+  const isMapOrHMR = url.pathname.endsWith('.map') || url.searchParams.has('import');
+
+  if (isDevAsset || isMapOrHMR) {
+    // Let the network handle these to avoid caching dev/HMR assets
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(req).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-
-        return fetch(event.request).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(req, responseToCache);
         });
-      })
+        return response;
+      }).catch(() => cached);
+    })
   );
 });
