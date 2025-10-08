@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Analytics from "./pages/Analytics";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const AppContent = () => {
           <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
           <Route path="/" element={user ? <Index /> : <Navigate to="/auth" replace />} />
           <Route path="/analytics" element={user ? <Analytics /> : <Navigate to="/auth" replace />} />
+          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
