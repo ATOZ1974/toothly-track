@@ -6,8 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Analytics from "./pages/Analytics";
-import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -17,29 +15,23 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative">
-        <div className="animated-bg" />
-        <div className="glass-card rounded-2xl p-8 text-center space-y-4 animate-scale-in">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-lg font-medium text-foreground">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="bg-white rounded-xl p-8 shadow-lg text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-lg font-medium text-slate-700">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen">
-      <div className="animated-bg" />
-      <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-        <Routes>
-          <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
-          <Route path="/" element={user ? <Index /> : <Navigate to="/auth" replace />} />
-          <Route path="/analytics" element={user ? <Analytics /> : <Navigate to="/auth" replace />} />
-          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <Routes>
+        <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+        <Route path="/" element={user ? <Index /> : <Navigate to="/auth" replace />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
