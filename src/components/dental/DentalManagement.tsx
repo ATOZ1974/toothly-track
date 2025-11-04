@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,8 +12,9 @@ import { FileUpload } from './FileUpload';
 import { ClinicalNotes } from './ClinicalNotes';
 import { PatientRecords } from './PatientRecords';
 import { PaymentSection } from './PaymentSection';
-import { Badge } from '@/components/ui/badge';
 import { useOfflineStorage } from '@/hooks/useOfflineStorage';
+import { FadeInOnScroll } from '@/components/FadeInOnScroll';
+import { AnimatedCard } from '@/components/AnimatedCard';
 import type { PatientRecord, PatientInfo, ToothState, Treatment, ClinicalNotes as NotesType, FileCategories, Payment, ToothStatus } from '@/types/dental';
 export function DentalManagement() {
   const {
@@ -128,84 +129,124 @@ export function DentalManagement() {
   return <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8 relative">
       <div className="container mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
-        <div className="glass-card rounded-2xl text-center p-4 sm:p-6 animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text mb-2 text-slate-50 lg:text-5xl">
+        <AnimatedCard delay={0} className="text-center p-4 sm:p-6" hover={false}>
+          <motion.h1
+            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text mb-2 text-slate-50 lg:text-5xl"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             🦷 Dental Patient Management
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Comprehensive dental care tracking system</p>
-        </div>
+          </motion.h1>
+          <motion.p
+            className="text-muted-foreground text-sm sm:text-base lg:text-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            Comprehensive dental care tracking system
+          </motion.p>
+        </AnimatedCard>
 
         {/* Offline/Online Status */}
         {!isOnline && (
-          <div className="glass-card rounded-2xl p-4 bg-yellow-500/10 border-yellow-500/20">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card rounded-2xl p-4 bg-yellow-500/10 border-yellow-500/20"
+          >
             <p className="text-sm text-yellow-600 dark:text-yellow-400">
               ⚠️ You're offline. Changes will be saved locally and synced when connection is restored.
               {pendingSync > 0 && ` (${pendingSync} items pending sync)`}
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* Patient Information */}
-        <PatientForm patientInfo={patientInfo} onPatientInfoChange={setPatientInfo} />
+        <FadeInOnScroll delay={0.1}>
+          <PatientForm patientInfo={patientInfo} onPatientInfoChange={setPatientInfo} />
+        </FadeInOnScroll>
 
         {/* Dental Chart Toggle */}
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            onClick={() => setUse3DChart(!use3DChart)}
-            className="glass-button"
-          >
-            {use3DChart ? '📊 Switch to 2D Chart' : '🎮 Switch to 3D Chart'}
-          </Button>
-        </div>
+        <FadeInOnScroll delay={0.2}>
+          <div className="flex justify-end">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="outline"
+                onClick={() => setUse3DChart(!use3DChart)}
+                className="glass-button"
+              >
+                {use3DChart ? '📊 Switch to 2D Chart' : '🎮 Switch to 3D Chart'}
+              </Button>
+            </motion.div>
+          </div>
+        </FadeInOnScroll>
 
         {/* Dental Chart */}
-        {use3DChart ? (
-          <DentalChart3D 
-            selectedTooth={selectedTooth} 
-            toothStates={toothStates} 
-            patientAge={patientInfo.age} 
-            onToothSelect={setSelectedTooth}
-            onToothStateChange={(tooth: number, state: ToothStatus) => {
-              setToothStates(prev => ({ ...prev, [tooth]: state }));
-            }}
-          />
-        ) : (
-          <DentalChart 
-            selectedTooth={selectedTooth} 
-            toothStates={toothStates} 
-            patientAge={patientInfo.age} 
-            onToothSelect={setSelectedTooth} 
-            onToothStateChange={setToothStates} 
-          />
-        )}
+        <FadeInOnScroll delay={0.3}>
+          {use3DChart ? (
+            <DentalChart3D 
+              selectedTooth={selectedTooth} 
+              toothStates={toothStates} 
+              patientAge={patientInfo.age} 
+              onToothSelect={setSelectedTooth}
+              onToothStateChange={(tooth: number, state: ToothStatus) => {
+                setToothStates(prev => ({ ...prev, [tooth]: state }));
+              }}
+            />
+          ) : (
+            <DentalChart 
+              selectedTooth={selectedTooth} 
+              toothStates={toothStates} 
+              patientAge={patientInfo.age} 
+              onToothSelect={setSelectedTooth} 
+              onToothStateChange={setToothStates} 
+            />
+          )}
+        </FadeInOnScroll>
 
         {/* Treatment Planning */}
-        <TreatmentPlanning treatments={treatments} selectedTooth={selectedTooth} toothStates={toothStates} onTreatmentsChange={setTreatments} />
+        <FadeInOnScroll delay={0.4}>
+          <TreatmentPlanning treatments={treatments} selectedTooth={selectedTooth} toothStates={toothStates} onTreatmentsChange={setTreatments} />
+        </FadeInOnScroll>
 
         {/* File Upload */}
-        <FileUpload files={files} onFilesChange={setFiles} patientId={currentRecordId || undefined} />
+        <FadeInOnScroll delay={0.5}>
+          <FileUpload files={files} onFilesChange={setFiles} patientId={currentRecordId || undefined} />
+        </FadeInOnScroll>
 
         {/* Payments */}
-        <PaymentSection payments={payments} onChange={setPayments} />
+        <FadeInOnScroll delay={0.6}>
+          <PaymentSection payments={payments} onChange={setPayments} />
+        </FadeInOnScroll>
 
         {/* Clinical Notes */}
-        <ClinicalNotes notes={notes} onNotesChange={setNotes} />
+        <FadeInOnScroll delay={0.7}>
+          <ClinicalNotes notes={notes} onNotesChange={setNotes} />
+        </FadeInOnScroll>
 
         {/* Action Buttons */}
-        <div className="glass-card rounded-2xl p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
-            <Button variant="outline" onClick={clearForm} className="w-full sm:w-auto glass-button">
-              Clear Form
-            </Button>
-            <Button variant="secondary" onClick={() => setShowRecords(!showRecords)} className="w-full sm:w-auto glass-button">
-              {showRecords ? 'Hide' : 'Show'} Patient Records
-            </Button>
-            <Button onClick={savePatientRecord} className="w-full sm:w-auto glass-button bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
-              💾 {loading ? 'Saving...' : 'Save Patient Record'}
-            </Button>
-          </div>
-        </div>
+        <FadeInOnScroll delay={0.8}>
+          <AnimatedCard className="p-4 sm:p-6" hover={false}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={clearForm} className="w-full glass-button">
+                  Clear Form
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                <Button variant="secondary" onClick={() => setShowRecords(!showRecords)} className="w-full glass-button">
+                  {showRecords ? 'Hide' : 'Show'} Patient Records
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                <Button onClick={savePatientRecord} className="w-full glass-button bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
+                  💾 {loading ? 'Saving...' : 'Save Patient Record'}
+                </Button>
+              </motion.div>
+            </div>
+          </AnimatedCard>
+        </FadeInOnScroll>
 
         {/* Patient Records */}
         {showRecords && <PatientRecords patients={patients} loading={loading} onLoadPatient={record => {
