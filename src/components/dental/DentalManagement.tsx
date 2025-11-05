@@ -167,21 +167,6 @@ export function DentalManagement() {
           <PatientForm patientInfo={patientInfo} onPatientInfoChange={setPatientInfo} />
         </FadeInOnScroll>
 
-        {/* Dental Chart Toggle */}
-        <FadeInOnScroll delay={0.2}>
-          <div className="flex justify-end">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outline"
-                onClick={() => setUse3DChart(!use3DChart)}
-                className="glass-button"
-              >
-                {use3DChart ? '📊 Switch to 2D Chart' : '🎮 Switch to 3D Chart'}
-              </Button>
-            </motion.div>
-          </div>
-        </FadeInOnScroll>
-
         {/* Dental Chart */}
         <FadeInOnScroll delay={0.3}>
           {use3DChart ? (
