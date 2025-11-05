@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Download, TrendingUp, Users, DollarSign, Activity } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { format, subDays } from 'date-fns';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { RevenueCharts } from './RevenueCharts';
@@ -34,7 +35,13 @@ export function RevenueDashboard() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="justify-start text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="inline-block"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 inline" />
+                </motion.div>
                 {format(startDate, 'MMM dd')} - {format(endDate, 'MMM dd, yyyy')}
               </Button>
             </PopoverTrigger>
@@ -63,7 +70,13 @@ export function RevenueDashboard() {
           </Popover>
 
           <Button onClick={() => setShowExport(true)}>
-            <Download className="mr-2 h-4 w-4" />
+            <motion.div
+              whileHover={{ y: -2 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              className="inline-block"
+            >
+              <Download className="mr-2 h-4 w-4 inline" />
+            </motion.div>
             Export Report
           </Button>
         </div>

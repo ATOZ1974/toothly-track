@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileImage, FileText, X, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -214,7 +215,17 @@ export function FileUpload({
                 <input ref={el => fileInputRefs.current[category] = el} type="file" multiple accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={e => handleFileUpload(category, e.target.files)} />
                 
                 <Button onClick={() => fileInputRefs.current[category]?.click()} size="sm" className="mb-3" disabled={uploading[category]}>
-                  {uploading[category] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                  {uploading[category] ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <motion.div
+                      whileHover={{ y: -2 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="inline-block"
+                    >
+                      <Upload className="w-4 h-4 mr-2 inline" />
+                    </motion.div>
+                  )}
                   {uploading[category] ? 'Uploading...' : 'Upload Files'}
                 </Button>
                 
@@ -227,7 +238,12 @@ export function FileUpload({
                         <div className="flex items-center gap-2 ml-2">
                           <span className="text-muted-foreground">{formatFileSize(file.size)}</span>
                           <Button size="sm" variant="ghost" onClick={() => removeFile(category, index)} className="h-6 w-6 p-0">
-                            <X className="w-3 h-3" />
+                            <motion.div
+                              whileHover={{ rotate: 90, scale: 1.2 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            >
+                              <X className="w-3 h-3" />
+                            </motion.div>
                           </Button>
                         </div>
                       </div>)}

@@ -27,7 +27,13 @@ const Analytics = () => {
                   onClick={() => navigate('/')}
                   className="glass-button"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <motion.div
+                    whileHover={{ x: -4 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="inline-block"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2 inline" />
+                  </motion.div>
                   Back to Dashboard
                 </Button>
               </motion.div>

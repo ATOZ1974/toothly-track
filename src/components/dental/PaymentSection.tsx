@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Payment } from '@/types/dental';
 interface PaymentSectionProps {
   payments: Payment[];
@@ -98,7 +99,14 @@ export function PaymentSection({
         </div>
         <div className="flex justify-end">
           <Button onClick={addPayment} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-            <Plus className="w-4 h-4 mr-2" /> Add Payment
+            <motion.div
+              whileHover={{ rotate: 90, scale: 1.2 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              className="inline-block"
+            >
+              <Plus className="w-4 h-4 mr-2 inline" />
+            </motion.div>
+            Add Payment
           </Button>
         </div>
 
@@ -122,7 +130,13 @@ export function PaymentSection({
                     <td className="py-2 text-muted-foreground">{p.notes || '-'}</td>
                     <td className="py-2 text-right">
                       <Button size="icon" variant="ghost" onClick={() => removePayment(p.id)}>
-                        <Trash2 className="w-4 h-4" />
+                        <motion.div
+                          whileHover={{ scale: 1.2, rotate: -10 }}
+                          whileTap={{ scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.div>
                       </Button>
                     </td>
                   </tr>)}

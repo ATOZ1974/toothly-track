@@ -36,7 +36,13 @@ const Profile = () => {
                 onClick={() => navigate('/')}
                 className="glass-button"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <motion.div
+                  whileHover={{ x: -4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="inline-block"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2 inline" />
+                </motion.div>
                 Back to Dashboard
               </Button>
             </motion.div>
@@ -91,7 +97,12 @@ const Profile = () => {
                     onClick={() => navigate('/analytics')}
                     className="glass-button h-auto py-6 flex-col gap-2 w-full"
                   >
-                    <BarChart3 className="w-6 h-6" />
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <BarChart3 className="w-6 h-6" />
+                    </motion.div>
                     <span className="font-medium">Analytics</span>
                   </Button>
                 </motion.div>
@@ -101,7 +112,12 @@ const Profile = () => {
                     onClick={signOut}
                     className="glass-button h-auto py-6 flex-col gap-2 w-full"
                   >
-                    <LogOut className="w-6 h-6" />
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <LogOut className="w-6 h-6" />
+                    </motion.div>
                     <span className="font-medium">Sign Out</span>
                   </Button>
                 </motion.div>

@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Link2, Unlink } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Treatment, ToothState } from '@/types/dental';
 interface TreatmentPlanningProps {
   treatments: Treatment[];
@@ -156,17 +157,34 @@ export function TreatmentPlanning({
                     
                     <div className="flex items-center gap-2">
                       {selectedTooth && <Button size="sm" variant="outline" onClick={() => attachToothToTreatment(treatment.id)} className="text-xs">
-                          <Link2 className="w-3 h-3 mr-1" />
+                          <motion.div
+                            whileHover={{ scale: 1.2 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            className="inline-block"
+                          >
+                            <Link2 className="w-3 h-3 mr-1 inline" />
+                          </motion.div>
                           Attach Tooth {selectedTooth}
                         </Button>}
                       
                       {treatment.tooth && <Button size="sm" variant="outline" onClick={() => detachToothFromTreatment(treatment.id)} className="text-xs">
-                          <Unlink className="w-3 h-3 mr-1" />
+                          <motion.div
+                            whileHover={{ scale: 1.2 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            className="inline-block"
+                          >
+                            <Unlink className="w-3 h-3 mr-1 inline" />
+                          </motion.div>
                           Detach
                         </Button>}
                       
                       <Button size="sm" variant="destructive" onClick={() => removeTreatment(treatment.id)} className="text-xs">
-                        <X className="w-3 h-3" />
+                        <motion.div
+                          whileHover={{ rotate: 90, scale: 1.2 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
+                          <X className="w-3 h-3" />
+                        </motion.div>
                       </Button>
                     </div>
                   </div>

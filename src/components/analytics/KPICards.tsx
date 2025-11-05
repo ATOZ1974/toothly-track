@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, Activity, TrendingUp } from 'lucide-react';
 import { AnalyticsSummary } from '@/hooks/useAnalytics';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 interface KPICardsProps {
   summary: AnalyticsSummary;
@@ -68,9 +69,14 @@ export function KPICards({ summary, loading }: KPICardsProps) {
               <CardTitle className="text-sm font-medium">
                 {kpi.title}
               </CardTitle>
-              <div className={`p-2 rounded-full ${kpi.bgColor}`}>
+              <motion.div 
+                className={`p-2 rounded-full ${kpi.bgColor}`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <Icon className={`h-4 w-4 ${kpi.color}`} />
-              </div>
+              </motion.div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
