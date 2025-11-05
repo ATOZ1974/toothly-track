@@ -8,6 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { PageTransition } from '@/components/PageTransition';
+import { z } from 'zod';
+
+const signUpSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  fullName: z.string().trim().min(1, { message: "Full name is required" }).max(100),
+  practiceName: z.string().trim().max(100).optional(),
+});
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,15 +24,19 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
-    // Check if user is already authenticated
+    // Check if user is already authenticated and clear stale tokens
     const checkAuth = async () => {
-      const {
-        data: {
-          session
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          // Clear stale session data on error
+          await supabase.auth.signOut({ scope: 'local' });
+        } else if (session) {
+          navigate('/');
         }
-      } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/');
+      } catch (err) {
+        console.error('Auth check error:', err);
+        await supabase.auth.signOut({ scope: 'local' });
       }
     };
     checkAuth();
@@ -32,27 +44,56 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      const {
-        error
-      } = await supabase.auth.signUp({
-        email,
+      // Validate input
+      const validationResult = signUpSchema.safeParse({
+        email: email.trim(),
         password,
+        fullName: fullName.trim(),
+        practiceName: practiceName.trim() || undefined,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Clear any stale auth data before signing up
+      await supabase.auth.signOut({ scope: 'local' });
+
+      const { data, error } = await supabase.auth.signUp({
+        email: validationResult.data.email,
+        password: validationResult.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            full_name: fullName,
-            practice_name: practiceName
+            full_name: validationResult.data.fullName,
+            practice_name: validationResult.data.practiceName || null,
           }
         }
       });
+
       if (error) {
+        console.error('Sign up error:', error);
         toast.error(error.message);
-      } else {
-        toast.success('Check your email for the confirmation link!');
+      } else if (data.user) {
+        if (data.user.identities && data.user.identities.length === 0) {
+          toast.error('An account with this email already exists. Please sign in instead.');
+        } else {
+          toast.success('Account created! Check your email to confirm your account.');
+          // Clear form
+          setEmail('');
+          setPassword('');
+          setFullName('');
+          setPracticeName('');
+        }
       }
-    } catch (error) {
-      toast.error('An unexpected error occurred');
+    } catch (error: any) {
+      console.error('Unexpected sign up error:', error);
+      toast.error(error.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
