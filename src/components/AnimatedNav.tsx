@@ -70,26 +70,6 @@ export const AnimatedNav = () => {
               Welcome, {user?.user_metadata?.full_name || user?.email}
             </motion.span>
           </motion.div>
-          <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Button
-              variant="outline"
-              onClick={() => navigate('/profile')}
-              className="glass-button group"
-              size="sm"
-            >
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-              >
-                <User className="w-4 h-4 mr-2" />
-              </motion.div>
-              Profile
-            </Button>
-          </motion.div>
         </div>
       </motion.div>
     </motion.div>
