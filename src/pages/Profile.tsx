@@ -31,10 +31,8 @@ const Profile = () => {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button 
-                variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/')}
-                className="glass-button"
               >
                 <motion.div
                   whileHover={{ x: -4 }}
