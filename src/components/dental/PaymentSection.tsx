@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Payment } from '@/types/dental';
+import { paymentSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 interface PaymentSectionProps {
   payments: Payment[];
   onChange: (payments: Payment[]) => void;
@@ -25,16 +27,31 @@ export function PaymentSection({
   const balance = totalAmountNum - totalPaid;
   const addPayment = () => {
     const value = parseFloat(amount);
-    if (isNaN(value) || value <= 0) return;
+    
+    // Validate payment before adding
+    const validation = paymentSchema.safeParse({
+      amount: value,
+      method,
+      paidAt,
+      notes,
+    });
+    
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+    
     const id = `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const payment: Payment = {
       id,
-      amount: value,
-      method,
-      paidAt: new Date(paidAt).toISOString(),
-      notes: notes?.trim() || undefined
+      amount: validation.data.amount,
+      method: validation.data.method,
+      paidAt: new Date(validation.data.paidAt).toISOString(),
+      notes: validation.data.notes || undefined
     };
     onChange([...(payments || []), payment]);
+    
     // reset form
     setAmount('');
     setMethod('cash');

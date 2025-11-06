@@ -31,7 +31,7 @@ export function usePatients() {
       if (patientsError) throw patientsError;
 
       // Transform database data to PatientRecord format
-      const records: PatientRecord[] = (patientsData || []).map(patient => {
+      const records: PatientRecord[] = await Promise.all((patientsData || []).map(async patient => {
         const dentalRecord = Array.isArray(patient.dental_records)
           ? patient.dental_records[0]
           : patient.dental_records;
@@ -39,19 +39,62 @@ export function usePatients() {
         const files = patient.patient_files || [];
         const payments = patient.payments || [];
 
-        console.log(`Loading patient ${patient.name}:`, {
-          teeth: dentalRecord?.tooth_states,
-          treatments: treatments.length,
-          files: files.length,
-          payments: payments.length,
-          notes: {
-            chief_complaint: dentalRecord?.chief_complaint,
-            clinical_notes: dentalRecord?.clinical_notes,
-            treatment_notes: dentalRecord?.treatment_notes
-          }
-        });
+        // Generate signed URLs for files (removed console logging of PHI)
 
         // Group files by category
+        // Generate signed URLs for each file (async processing)
+        const personalFiles = await Promise.all(
+          files.filter(f => f.file_category === 'personal').map(async (f) => {
+            const { data } = await supabase.storage.from('patient-files').createSignedUrl(f.file_path, 3600);
+            return {
+              name: f.file_name,
+              size: f.file_size || 0,
+              type: f.mime_type || '',
+              dataUrl: data?.signedUrl || '',
+              uploadedAt: f.created_at,
+            };
+          })
+        );
+
+        const diagnosticsFiles = await Promise.all(
+          files.filter(f => f.file_category === 'diagnostics').map(async (f) => {
+            const { data } = await supabase.storage.from('patient-files').createSignedUrl(f.file_path, 3600);
+            return {
+              name: f.file_name,
+              size: f.file_size || 0,
+              type: f.mime_type || '',
+              dataUrl: data?.signedUrl || '',
+              uploadedAt: f.created_at,
+            };
+          })
+        );
+
+        const treatmentFiles = await Promise.all(
+          files.filter(f => f.file_category === 'treatment').map(async (f) => {
+            const { data } = await supabase.storage.from('patient-files').createSignedUrl(f.file_path, 3600);
+            return {
+              name: f.file_name,
+              size: f.file_size || 0,
+              type: f.mime_type || '',
+              dataUrl: data?.signedUrl || '',
+              uploadedAt: f.created_at,
+            };
+          })
+        );
+
+        const xraysFiles = await Promise.all(
+          files.filter(f => f.file_category === 'xrays').map(async (f) => {
+            const { data } = await supabase.storage.from('patient-files').createSignedUrl(f.file_path, 3600);
+            return {
+              name: f.file_name,
+              size: f.file_size || 0,
+              type: f.mime_type || '',
+              dataUrl: data?.signedUrl || '',
+              uploadedAt: f.created_at,
+            };
+          })
+        );
+
         return {
           id: patient.id,
           savedAt: patient.created_at,
@@ -75,34 +118,10 @@ export function usePatients() {
             treatmentNotes: dentalRecord?.treatment_notes || '',
           },
           files: {
-            personal: files.filter(f => f.file_category === 'personal').map(f => ({
-              name: f.file_name,
-              size: f.file_size || 0,
-              type: f.mime_type || '',
-              dataUrl: supabase.storage.from('patient-files').getPublicUrl(f.file_path).data.publicUrl,
-              uploadedAt: f.created_at,
-            })),
-            diagnostics: files.filter(f => f.file_category === 'diagnostics').map(f => ({
-              name: f.file_name,
-              size: f.file_size || 0,
-              type: f.mime_type || '',
-              dataUrl: supabase.storage.from('patient-files').getPublicUrl(f.file_path).data.publicUrl,
-              uploadedAt: f.created_at,
-            })),
-            treatment: files.filter(f => f.file_category === 'treatment').map(f => ({
-              name: f.file_name,
-              size: f.file_size || 0,
-              type: f.mime_type || '',
-              dataUrl: supabase.storage.from('patient-files').getPublicUrl(f.file_path).data.publicUrl,
-              uploadedAt: f.created_at,
-            })),
-            xrays: files.filter(f => f.file_category === 'xrays').map(f => ({
-              name: f.file_name,
-              size: f.file_size || 0,
-              type: f.mime_type || '',
-              dataUrl: supabase.storage.from('patient-files').getPublicUrl(f.file_path).data.publicUrl,
-              uploadedAt: f.created_at,
-            })),
+            personal: personalFiles,
+            diagnostics: diagnosticsFiles,
+            treatment: treatmentFiles,
+            xrays: xraysFiles,
           },
           payments: payments.map(p => ({
             id: p.id,
@@ -112,7 +131,7 @@ export function usePatients() {
             notes: p.notes || undefined,
           })),
         };
-      });
+      }));
 
       setPatients(records);
     } catch (error) {
@@ -125,23 +144,7 @@ export function usePatients() {
   const savePatient = async (record: Omit<PatientRecord, 'id' | 'savedAt'>, existingId?: string) => {
     if (!user) throw new Error('User not authenticated');
 
-    console.log('Saving patient record:', {
-      patient: record.patient.name,
-      teeth: Object.keys(record.teeth).length,
-      treatments: record.treatments.length,
-      files: {
-        personal: record.files.personal.length,
-        diagnostics: record.files.diagnostics.length,
-        treatment: record.files.treatment.length,
-        xrays: record.files.xrays.length
-      },
-      payments: record.payments?.length || 0,
-      notes: {
-        chiefComplaint: record.notes.chiefComplaint?.substring(0, 50) || '(empty)',
-        clinicalNotes: record.notes.clinicalNotes?.substring(0, 50) || '(empty)',
-        treatmentNotes: record.notes.treatmentNotes?.substring(0, 50) || '(empty)'
-      }
-    });
+    // Removed console logging of patient PHI data
 
     try {
       let patientData;

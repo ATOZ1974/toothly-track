@@ -2,6 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { ClinicalNotes as NotesType } from '@/types/dental';
+import { clinicalNotesSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 interface ClinicalNotesProps {
   notes: NotesType;
   onNotesChange: (notes: NotesType) => void;
@@ -11,10 +13,21 @@ export function ClinicalNotes({
   onNotesChange
 }: ClinicalNotesProps) {
   const updateField = (field: keyof NotesType, value: string) => {
-    onNotesChange({
+    const updatedNotes = {
       ...notes,
       [field]: value
-    });
+    };
+    
+    // Validate on change
+    const validation = clinicalNotesSchema.safeParse(updatedNotes);
+    if (!validation.success) {
+      const fieldError = validation.error.errors.find(e => e.path[0] === field);
+      if (fieldError) {
+        toast.error(fieldError.message);
+      }
+    }
+    
+    onNotesChange(updatedNotes);
   };
   return <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>

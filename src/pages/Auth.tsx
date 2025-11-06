@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { PageTransition } from '@/components/PageTransition';
+import { signUpSchema, signInSchema } from '@/lib/validations';
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,20 +33,37 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
+      // Validate inputs
+      const validation = signUpSchema.safeParse({
+        email,
+        password,
+        fullName,
+        practiceName,
+      });
+      
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+      
       const {
         error
       } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            full_name: fullName,
-            practice_name: practiceName
+            full_name: validation.data.fullName,
+            practice_name: validation.data.practiceName || ''
           }
         }
       });
+      
       if (error) {
         toast.error(error.message);
       } else {
@@ -60,13 +78,25 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
+      // Validate inputs
+      const validation = signInSchema.safeParse({ email, password });
+      
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+      
       const {
         error
       } = await supabase.auth.signInWithPassword({
-        email,
-        password
+        email: validation.data.email,
+        password: validation.data.password
       });
+      
       if (error) {
         toast.error(error.message);
       } else {

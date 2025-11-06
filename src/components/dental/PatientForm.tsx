@@ -2,6 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PatientInfo } from '@/types/dental';
+import { patientSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 interface PatientFormProps {
   patientInfo: PatientInfo;
   onPatientInfoChange: (info: PatientInfo) => void;
@@ -11,10 +13,21 @@ export function PatientForm({
   onPatientInfoChange
 }: PatientFormProps) {
   const updateField = (field: keyof PatientInfo, value: string | number | null) => {
-    onPatientInfoChange({
+    const updatedInfo = {
       ...patientInfo,
       [field]: value
-    });
+    };
+    
+    // Validate on blur
+    const validation = patientSchema.safeParse(updatedInfo);
+    if (!validation.success && value) {
+      const fieldError = validation.error.errors.find(e => e.path[0] === field);
+      if (fieldError) {
+        toast.error(fieldError.message);
+      }
+    }
+    
+    onPatientInfoChange(updatedInfo);
   };
   return <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>

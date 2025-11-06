@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,8 +10,24 @@ import { Upload, Loader2, Camera } from 'lucide-react';
 export function ProfilePicture() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [isHovered, setIsHovered] = useState(false);
+
+  // Load signed URL for avatar on mount
+  useEffect(() => {
+    const loadAvatarUrl = async () => {
+      if (user?.user_metadata?.avatar_path) {
+        const { data, error } = await supabase.storage
+          .from('avatars')
+          .createSignedUrl(user.user_metadata.avatar_path, 86400); // 24 hours
+        
+        if (!error && data?.signedUrl) {
+          setAvatarUrl(data.signedUrl);
+        }
+      }
+    };
+    loadAvatarUrl();
+  }, [user]);
 
   const getInitials = () => {
     const name = user?.user_metadata?.full_name || user?.email || '';
@@ -57,19 +73,21 @@ export function ProfilePicture() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Generate signed URL (expires in 24 hours for avatars)
+      const { data: signedData, error: signedError } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 86400); // 24 hours
 
-      // Update user metadata
+      if (signedError) throw signedError;
+
+      // Update user metadata with file path (not signed URL)
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl }
+        data: { avatar_path: fileName }
       });
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(publicUrl);
+      setAvatarUrl(signedData.signedUrl);
       
       // Force refresh the page to update avatar everywhere
       window.location.reload();
@@ -97,9 +115,9 @@ export function ProfilePicture() {
         }
       }
 
-      // Update user metadata to remove avatar
+      // Update user metadata to remove avatar path
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: null }
+        data: { avatar_path: null }
       });
 
       if (updateError) throw updateError;

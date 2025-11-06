@@ -64,30 +64,42 @@ export function FileUpload({
   });
   const handleFileUpload = async (category: FileCategory, fileList: FileList | null) => {
     if (!fileList || !user) return;
+    
     setUploading(prev => ({
       ...prev,
       [category]: true
     }));
+    
     try {
       const newFiles = Array.from(fileList);
+      
+      // Validate files before upload
+      for (const file of newFiles) {
+        const { validateFile } = await import('@/lib/validations');
+        const validation = validateFile(file);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+      }
+      
       const uploadPromises = newFiles.map(async file => {
-        // Generate unique file path
+        // Generate unique file path with user ID for RLS
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${category}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage (now private bucket)
         const {
           data: uploadData,
           error: uploadError
         } = await supabase.storage.from('patient-files').upload(fileName, file);
         if (uploadError) throw uploadError;
 
-        // Get public URL
-        const {
-          data: {
-            publicUrl
-          }
-        } = supabase.storage.from('patient-files').getPublicUrl(fileName);
+        // Generate signed URL (expires in 1 hour)
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from('patient-files')
+          .createSignedUrl(fileName, 3600); // 1 hour expiry
+
+        if (signedUrlError) throw signedUrlError;
 
         // Save file metadata to database if patientId exists
         if (patientId) {
@@ -98,45 +110,35 @@ export function FileUpload({
             file_category: category,
             file_name: file.name,
             file_path: fileName,
-            // Store the storage path, not public URL
             file_size: file.size,
             mime_type: file.type
           });
           if (dbError) throw dbError;
         }
 
-        // Create data URL for preview
-        const dataUrl = await new Promise<string>(resolve => {
-          const reader = new FileReader();
-          reader.onload = e => resolve(e.target?.result as string || '');
-          if (file.type.startsWith('image/')) {
-            reader.readAsDataURL(file);
-          } else {
-            resolve(''); // No preview for non-image files
-          }
-        });
         return {
           name: file.name,
           size: file.size,
           type: file.type,
-          dataUrl: publicUrl,
-          // Always use publicUrl for storage consistency
+          dataUrl: signedUrlData.signedUrl,
           uploadedAt: new Date().toISOString()
         };
       });
+      
       const uploadedFiles = await Promise.all(uploadPromises);
       onFilesChange({
         ...files,
         [category]: [...files[category], ...uploadedFiles]
       });
+      
       toast({
         title: "Files uploaded successfully",
         description: `${uploadedFiles.length} file(s) uploaded to ${categoryConfig[category].title}`
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your files. Please try again.",
+        description: error.message || "There was an error uploading your files. Please try again.",
         variant: "destructive"
       });
     } finally {
