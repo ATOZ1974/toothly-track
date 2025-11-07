@@ -10,6 +10,8 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { usePatients } from '@/hooks/usePatients';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAppointments } from '@/hooks/useAppointments';
+import { format, isToday, isTomorrow } from 'date-fns';
 import { 
   UserPlus, 
   ClipboardPlus, 
@@ -20,7 +22,8 @@ import {
   User,
   Pill,
   CalendarCheck,
-  Search
+  Search,
+  Clock
 } from 'lucide-react';
 
 const Home = () => {
@@ -47,6 +50,32 @@ const Home = () => {
   }, [reportPeriod]);
 
   const { summary, loading: analyticsLoading } = useAnalytics(startDate, endDate);
+  const { appointments, loading: appointmentsLoading } = useAppointments();
+
+  // Get upcoming appointments (scheduled only)
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments
+      .filter(apt => {
+        const aptDate = new Date(apt.appointment_date + 'T' + apt.start_time);
+        return aptDate >= now && apt.status === 'scheduled';
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.appointment_date + 'T' + a.start_time);
+        const dateB = new Date(b.appointment_date + 'T' + b.start_time);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, 3);
+  }, [appointments]);
+
+  const nextAppointment = upcomingAppointments[0];
+
+  const getDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (isToday(date)) return 'Today';
+    if (isTomorrow(date)) return 'Tomorrow';
+    return format(date, 'MMM dd, yyyy');
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -89,12 +118,12 @@ const Home = () => {
     },
     {
       title: 'Appointments',
-      count: 0,
+      count: appointmentsLoading ? '...' : appointments.filter(a => a.status === 'scheduled').length,
       icon: CalendarCheck,
       gradient: 'from-emerald-400 to-teal-500',
       buttonText: 'Book Now',
       buttonIcon: CalendarPlus,
-      action: () => {}
+      action: () => navigate('/book-appointment')
     }
   ];
 
@@ -197,19 +226,51 @@ const Home = () => {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">Upcoming appointment</h2>
-              <Button variant="ghost" size="sm">→</Button>
+              {upcomingAppointments.length > 1 && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/book-appointment')}>
+                  View All
+                </Button>
+              )}
             </div>
 
-            <Card className="glass-card p-8 text-center space-y-4">
-              <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="w-12 h-12 text-primary" />
-              </div>
-              <p className="text-foreground font-medium">You don't have any appointment</p>
-              <Button className="w-full sm:w-auto">
-                <CalendarPlus className="w-4 h-4 mr-2" />
-                Book Now
-              </Button>
-            </Card>
+            {nextAppointment ? (
+              <Card className="glass-card p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{nextAppointment.patient?.name}</p>
+                      <p className="text-sm text-muted-foreground">{nextAppointment.patient?.phone}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {getDateLabel(nextAppointment.appointment_date)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">{nextAppointment.start_time} - {nextAppointment.end_time}</span>
+                </div>
+                {upcomingAppointments.length > 1 && (
+                  <p className="text-sm text-muted-foreground">
+                    +{upcomingAppointments.length - 1} more appointment{upcomingAppointments.length > 2 ? 's' : ''}
+                  </p>
+                )}
+              </Card>
+            ) : (
+              <Card className="glass-card p-8 text-center space-y-4">
+                <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-12 h-12 text-primary" />
+                </div>
+                <p className="text-foreground font-medium">You don't have any appointment</p>
+                <Button className="w-full sm:w-auto" onClick={() => navigate('/book-appointment')}>
+                  <CalendarPlus className="w-4 h-4 mr-2" />
+                  Book Now
+                </Button>
+              </Card>
+            )}
           </motion.div>
 
           {/* Activity Section */}
@@ -291,6 +352,7 @@ const Home = () => {
               <Button
                 variant="ghost"
                 className="flex-col h-auto py-2 text-muted-foreground"
+                onClick={() => navigate('/book-appointment')}
               >
                 <Calendar className="w-6 h-6 mb-1" />
                 <span className="text-xs">Calendar</span>
