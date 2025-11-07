@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { usePatients } from '@/hooks/usePatients';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { 
   UserPlus, 
   ClipboardPlus, 
@@ -26,6 +28,25 @@ const Home = () => {
   const { user } = useAuth();
   const [reportPeriod, setReportPeriod] = useState<'today' | '7days' | '30days'>('today');
   const [activityTab, setActivityTab] = useState('patient');
+  const { patients, loading: patientsLoading } = usePatients();
+
+  // Calculate date range based on report period
+  const { startDate, endDate } = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    
+    if (reportPeriod === 'today') {
+      start.setHours(0, 0, 0, 0);
+    } else if (reportPeriod === '7days') {
+      start.setDate(start.getDate() - 7);
+    } else {
+      start.setDate(start.getDate() - 30);
+    }
+    
+    return { startDate: start, endDate: end };
+  }, [reportPeriod]);
+
+  const { summary, loading: analyticsLoading } = useAnalytics(startDate, endDate);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -41,7 +62,7 @@ const Home = () => {
   const dashboardCards = [
     {
       title: 'Patients',
-      count: 0,
+      count: patientsLoading ? '...' : patients.length,
       icon: User,
       gradient: 'from-cyan-400 to-blue-500',
       buttonText: 'Add Patient',
@@ -50,7 +71,7 @@ const Home = () => {
     },
     {
       title: 'Treatments',
-      count: 0,
+      count: analyticsLoading ? '...' : summary.totalTreatments,
       icon: Pill,
       gradient: 'from-rose-400 to-pink-500',
       buttonText: 'Add Treatment',
@@ -59,7 +80,7 @@ const Home = () => {
     },
     {
       title: 'Collection',
-      count: 0,
+      count: analyticsLoading ? '...' : `₹${summary.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       gradient: 'from-orange-400 to-amber-500',
       buttonText: 'View Report',
