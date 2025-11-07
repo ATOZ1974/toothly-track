@@ -1,16 +1,7 @@
-import { DentalManagement } from '@/components/dental/DentalManagement';
-import { AnimatedNav } from '@/components/AnimatedNav';
-import { PageTransition } from '@/components/PageTransition';
+import Home from './Home';
 
 const Index = () => {
-  return (
-    <PageTransition>
-      <div className="min-h-screen relative">
-        <AnimatedNav />
-        <DentalManagement />
-      </div>
-    </PageTransition>
-  );
+  return <Home />;
 };
 
 export default Index;
