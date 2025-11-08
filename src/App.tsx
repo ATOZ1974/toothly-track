@@ -10,6 +10,7 @@ import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import AddPatient from "./pages/AddPatient";
 import BookAppointment from "./pages/BookAppointment";
+import NewAppointment from "./pages/NewAppointment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const AppContent = () => {
           <Route path="/" element={user ? <Index /> : <Navigate to="/auth" replace />} />
           <Route path="/add-patient" element={user ? <AddPatient /> : <Navigate to="/auth" replace />} />
           <Route path="/book-appointment" element={user ? <BookAppointment /> : <Navigate to="/auth" replace />} />
+          <Route path="/new-appointment" element={user ? <NewAppointment /> : <Navigate to="/auth" replace />} />
           <Route path="/analytics" element={user ? <Analytics /> : <Navigate to="/auth" replace />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" replace />} />
           <Route path="*" element={<NotFound />} />
