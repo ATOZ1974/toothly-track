@@ -89,11 +89,16 @@ const NewAppointment = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-10 bg-background border-b">
+      <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/book-appointment')}>
-              <ArrowLeft className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/book-appointment')}
+              className="hover:bg-accent"
+            >
+              <ArrowLeft className="w-6 h-6" />
             </Button>
             <h1 className="text-xl font-semibold">Book New Appointment</h1>
           </div>
@@ -178,11 +183,11 @@ const NewAppointment = () => {
                   disabled={status === 'booked' || status === 'completed'}
                   onClick={() => setSelectedSlot(slot)}
                   className={cn(
-                    "h-14 text-base font-medium",
-                    status === 'selected' && "bg-primary text-primary-foreground border-primary",
-                    status === 'booked' && "bg-orange-500 text-white opacity-50",
-                    status === 'completed' && "bg-muted opacity-50",
-                    status === 'available' && "hover:border-primary"
+                    "h-14 text-base font-medium transition-all",
+                    status === 'selected' && "bg-primary text-primary-foreground border-primary shadow-md",
+                    status === 'booked' && "bg-destructive/90 text-destructive-foreground border-destructive cursor-not-allowed",
+                    status === 'completed' && "bg-muted text-muted-foreground opacity-60 cursor-not-allowed",
+                    status === 'available' && "hover:border-primary hover:shadow-sm"
                   )}
                 >
                   {slot.start} - {slot.end}
@@ -206,7 +211,7 @@ const NewAppointment = () => {
             <span>Completed</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-orange-500 rounded" />
+            <div className="w-4 h-4 bg-destructive/90 rounded" />
             <span>Fully Booked</span>
           </div>
         </div>
