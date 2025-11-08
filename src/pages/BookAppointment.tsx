@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, isToday } from 'date-fns';
-import { Plus, MoreVertical, SlidersHorizontal, Clock, Phone } from 'lucide-react';
+import { Plus, MoreVertical, SlidersHorizontal, Clock, Phone, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -70,10 +70,20 @@ const BookAppointment = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b">
+      <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Appointment</h1>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/')}
+                className="hover:bg-accent"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </Button>
+              <h1 className="text-2xl font-bold">Appointment</h1>
+            </div>
             <Button variant="ghost" size="icon">
               <SlidersHorizontal className="w-5 h-5" />
             </Button>
