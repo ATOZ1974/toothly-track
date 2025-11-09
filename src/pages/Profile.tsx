@@ -1,13 +1,24 @@
-import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, LogOut, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { AccountCentre } from '@/components/profile/AccountCentre';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PageTransition } from '@/components/PageTransition';
-import { FadeInOnScroll } from '@/components/FadeInOnScroll';
-import { AnimatedCard } from '@/components/AnimatedCard';
+import { 
+  Wallet, 
+  Settings as SettingsIcon, 
+  Video, 
+  Calendar, 
+  Settings, 
+  AlertTriangle, 
+  MessageCircle, 
+  LogOut, 
+  Globe, 
+  Crown, 
+  ChevronRight, 
+  QrCode, 
+  Bell 
+} from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -18,118 +29,137 @@ const Profile = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const menuItems = [
+    {
+      section: 'Personal',
+      items: [
+        { icon: Wallet, label: 'Your Balance', path: '/balance' },
+        { icon: SettingsIcon, label: 'Clinic Configuration', path: '/clinic-config' },
+        { icon: Video, label: 'Video Consulting History', path: '/video-history' },
+        { icon: Calendar, label: 'Share Appointment Link', path: '/share-link' },
+        { icon: Settings, label: 'Settings', path: '/settings' },
+      ]
+    },
+    {
+      section: 'Support Us',
+      items: [
+        { icon: AlertTriangle, label: 'Report a Problem', path: '/report-problem' },
+        { icon: MessageCircle, label: 'Chat with us', path: '/chat-support' },
+      ]
+    }
+  ];
+
   return (
-    <PageTransition>
-      <div className="min-h-screen relative">
-        {/* Navigation Header */}
-        <motion.div
-          className="glass-nav sticky top-0 z-50"
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-        >
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                size="sm"
-                onClick={() => navigate('/')}
-              >
-                <motion.div
-                  whileHover={{ x: -4 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="inline-block"
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-background border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16">
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-xl font-semibold">
+                  {user?.user_metadata?.full_name || 'Dr. User'}
+                </h2>
+                <button 
+                  onClick={() => navigate('/update-profile')}
+                  className="text-sm text-primary hover:underline"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2 inline" />
-                </motion.div>
-                Back to Dashboard
+                  Update profile
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon">
+                <QrCode className="w-5 h-5" />
               </Button>
-            </motion.div>
-          </div>
-        </motion.div>
-        
-        {/* Main Content */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-4xl mx-auto space-y-8">
-            {/* Profile Header */}
-            <AnimatedCard delay={0} className="p-6 sm:p-8" hover={false}>
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <Avatar className="w-24 h-24 ring-4 ring-primary/20">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                </motion.div>
-                <div className="text-center sm:text-left flex-1">
-                  <motion.h1
-                    className="text-2xl sm:text-3xl font-bold text-foreground mb-2"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    {user?.user_metadata?.full_name || 'User'}
-                  </motion.h1>
-                  <motion.p
-                    className="text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                  >
-                    {user?.email}
-                  </motion.p>
-                </div>
-              </div>
-            </AnimatedCard>
-
-            {/* Quick Actions */}
-            <FadeInOnScroll delay={0.1}>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }}>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/analytics')}
-                    className="glass-button h-auto py-6 flex-col gap-2 w-full"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <BarChart3 className="w-6 h-6" />
-                    </motion.div>
-                    <span className="font-medium">Analytics</span>
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.98 }}>
-                  <Button 
-                    variant="outline" 
-                    onClick={signOut}
-                    className="glass-button h-auto py-6 flex-col gap-2 w-full"
-                  >
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <LogOut className="w-6 h-6" />
-                    </motion.div>
-                    <span className="font-medium">Sign Out</span>
-                  </Button>
-                </motion.div>
-              </div>
-            </FadeInOnScroll>
-
-            {/* Account Centre */}
-            <FadeInOnScroll delay={0.2}>
-              <AccountCentre />
-            </FadeInOnScroll>
+              <Button variant="ghost" size="icon">
+                <Bell className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </PageTransition>
+
+      <div className="container mx-auto px-4 py-6 space-y-4">
+        {/* Get Premium Card */}
+        <Card 
+          className="bg-primary text-primary-foreground p-4 cursor-pointer hover:bg-primary/90 transition-colors"
+          onClick={() => navigate('/premium')}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className="w-6 h-6" />
+              <span className="text-lg font-semibold">Get Premium</span>
+            </div>
+            <ChevronRight className="w-5 h-5" />
+          </div>
+        </Card>
+
+        {/* Menu Sections */}
+        {menuItems.map((section, idx) => (
+          <div key={idx} className="space-y-2">
+            <h3 className="text-sm text-muted-foreground px-2 font-medium">
+              {section.section}
+            </h3>
+            <Card className="divide-y">
+              {section.items.map((item, itemIdx) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={itemIdx}
+                    onClick={() => navigate(item.path)}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-accent transition-colors"
+                  >
+                    <Icon className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-base flex-1 text-left">{item.label}</span>
+                  </button>
+                );
+              })}
+            </Card>
+          </div>
+        ))}
+
+        <Separator className="my-4" />
+
+        {/* Logout */}
+        <Card>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 p-4 hover:bg-accent transition-colors"
+          >
+            <LogOut className="w-5 h-5 text-muted-foreground" />
+            <span className="text-base">Logout</span>
+          </button>
+        </Card>
+
+        {/* Go to Web App */}
+        <Card>
+          <button
+            onClick={() => window.open(window.location.origin, '_blank')}
+            className="w-full flex items-center gap-4 p-4 hover:bg-accent transition-colors"
+          >
+            <Globe className="w-5 h-5 text-muted-foreground" />
+            <span className="text-base flex-1 text-left">Go To Web App</span>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </Card>
+
+        {/* App Version */}
+        <p className="text-sm text-muted-foreground text-center py-4">
+          App version 12.2.8
+        </p>
+      </div>
+    </div>
   );
 };
 

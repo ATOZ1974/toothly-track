@@ -11,6 +11,13 @@ import Profile from "./pages/Profile";
 import AddPatient from "./pages/AddPatient";
 import BookAppointment from "./pages/BookAppointment";
 import NewAppointment from "./pages/NewAppointment";
+import Balance from "./pages/Balance";
+import ClinicConfig from "./pages/ClinicConfig";
+import VideoHistory from "./pages/VideoHistory";
+import ShareLink from "./pages/ShareLink";
+import AppSettings from "./pages/AppSettings";
+import ReportProblem from "./pages/ReportProblem";
+import ChatSupport from "./pages/ChatSupport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +49,13 @@ const AppContent = () => {
           <Route path="/new-appointment" element={user ? <NewAppointment /> : <Navigate to="/auth" replace />} />
           <Route path="/analytics" element={user ? <Analytics /> : <Navigate to="/auth" replace />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" replace />} />
+          <Route path="/balance" element={user ? <Balance /> : <Navigate to="/auth" replace />} />
+          <Route path="/clinic-config" element={user ? <ClinicConfig /> : <Navigate to="/auth" replace />} />
+          <Route path="/video-history" element={user ? <VideoHistory /> : <Navigate to="/auth" replace />} />
+          <Route path="/share-link" element={user ? <ShareLink /> : <Navigate to="/auth" replace />} />
+          <Route path="/settings" element={user ? <AppSettings /> : <Navigate to="/auth" replace />} />
+          <Route path="/report-problem" element={user ? <ReportProblem /> : <Navigate to="/auth" replace />} />
+          <Route path="/chat-support" element={user ? <ChatSupport /> : <Navigate to="/auth" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
