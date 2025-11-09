@@ -1,19 +1,20 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Wallet, 
-  Settings as SettingsIcon, 
-  Video, 
-  Calendar, 
-  Settings, 
-  AlertTriangle, 
-  MessageCircle, 
-  LogOut, 
-  Globe, 
-  Crown, 
-  ChevronRight, 
-  QrCode, 
-  Bell 
+import {
+  Wallet,
+  Settings as SettingsIcon,
+  Video,
+  Calendar,
+  Settings,
+  AlertTriangle,
+  MessageCircle,
+  LogOut,
+  Globe,
+  Crown,
+  ChevronRight,
+  QrCode,
+  Bell,
+  ArrowLeft
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -59,32 +60,42 @@ const Profile = () => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="w-16 h-16">
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {user?.user_metadata?.full_name || 'Dr. User'}
-                </h2>
-                <button 
-                  onClick={() => navigate('/update-profile')}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Update profile
-                </button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="hover:bg-accent"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <div className="flex items-center justify-between flex-1">
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {user?.user_metadata?.full_name || 'Dr. User'}
+                  </h2>
+                  <button
+                    onClick={() => navigate('/update-profile')}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Update profile
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon">
-                <QrCode className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Bell className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon">
+                  <QrCode className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <Bell className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
