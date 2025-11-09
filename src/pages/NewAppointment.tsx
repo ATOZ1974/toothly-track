@@ -73,6 +73,19 @@ const NewAppointment = () => {
       return;
     }
 
+    // Check if slot is already booked
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const isSlotBooked = appointments.some(
+      apt => apt.appointment_date === dateStr && 
+             apt.start_time === selectedSlot.start && 
+             apt.status !== 'cancelled'
+    );
+
+    if (isSlotBooked) {
+      toast.error('This time slot is already booked. Please select another time.');
+      return;
+    }
+
     const success = await createAppointment({
       patient_id: selectedPatient,
       appointment_date: format(selectedDate, 'yyyy-MM-dd'),
