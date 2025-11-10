@@ -1,25 +1,104 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Balance = () => {
   const navigate = useNavigate();
-  const [balance] = useState({
-    current: 15420.50,
-    income: 28350.00,
-    expenses: 12929.50
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [balance, setBalance] = useState({
+    current: 0,
+    income: 0,
+    expenses: 0
   });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newExpense, setNewExpense] = useState({
+    description: '',
+    amount: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const transactions = [
-    { id: 1, type: 'income', description: 'Patient Payment - John Doe', amount: 250, date: '2025-11-08' },
-    { id: 2, type: 'expense', description: 'Medical Supplies', amount: 180, date: '2025-11-07' },
-    { id: 3, type: 'income', description: 'Patient Payment - Jane Smith', amount: 320, date: '2025-11-07' },
-    { id: 4, type: 'expense', description: 'Equipment Maintenance', amount: 450, date: '2025-11-06' },
-    { id: 5, type: 'income', description: 'Patient Payment - Mike Johnson', amount: 280, date: '2025-11-06' },
-  ];
+  useEffect(() => {
+    if (user) {
+      loadTransactions();
+    }
+  }, [user]);
+
+  const loadTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      setTransactions(data || []);
+      calculateBalance(data || []);
+    } catch (err) {
+      console.error('Error loading transactions:', err);
+    }
+  };
+
+  const calculateBalance = (txns: any[]) => {
+    const income = txns
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    const expenses = txns
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    const current = income - expenses;
+
+    setBalance({
+      current,
+      income,
+      expenses
+    });
+  };
+
+  const handleAddExpense = async () => {
+    if (!newExpense.description || !newExpense.amount) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .insert([{
+          user_id: user?.id,
+          type: 'expense',
+          description: newExpense.description,
+          amount: parseFloat(newExpense.amount),
+          date: newExpense.date,
+          source: 'manual'
+        }]);
+
+      if (error) throw error;
+
+      setNewExpense({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
+      setIsDialogOpen(false);
+      loadTransactions();
+    } catch (err) {
+      console.error('Error adding expense:', err);
+      alert('Failed to add expense');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -77,6 +156,18 @@ const Balance = () => {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Add Expense Button */}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white relative overflow-hidden group"
+          >
+            <span className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-20 transition-opacity"></span>
+            <Plus className="w-5 h-5 mr-2" />
+            Add Expense
+          </Button>
         </div>
 
         {/* Transactions */}
@@ -156,6 +247,62 @@ const Balance = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Add Expense Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Expense</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="e.g., Medical Supplies, Equipment Maintenance"
+                value={newExpense.description}
+                onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                step="0.01"
+                value={newExpense.amount}
+                onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={newExpense.date}
+                onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddExpense}
+                disabled={isLoading}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isLoading ? 'Adding...' : 'Add Expense'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
