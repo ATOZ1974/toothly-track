@@ -64,7 +64,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="hover:bg-accent"
             >
               <ArrowLeft className="w-6 h-6" />
