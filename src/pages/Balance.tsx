@@ -1,19 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Plus } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+
+interface Payment {
+  id: string;
+  amount: number;
+  paid_at: string;
+  notes: string | null;
+  payment_method: string;
+  patient_id: string;
+}
+
+interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string | null;
+  expense_date: string;
+}
 
 const Balance = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [balance, setBalance] = useState({
     current: 0,
     income: 0,
@@ -23,82 +44,123 @@ const Balance = () => {
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
+    category: 'general',
     date: new Date().toISOString().split('T')[0]
   });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
-      loadTransactions();
+      loadData();
     }
   }, [user]);
 
-  const loadTransactions = async () => {
+  const loadData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
+      // Load payments (income from treatments)
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select(`
+          id, amount, paid_at, notes, payment_method, patient_id,
+          patients!inner(user_id)
+        `)
+        .eq('patients.user_id', user?.id)
+        .order('paid_at', { ascending: false });
+
+      if (paymentsError) throw paymentsError;
+
+      // Load expenses
+      const { data: expensesData, error: expensesError } = await supabase
+        .from('expenses')
         .select('*')
         .eq('user_id', user?.id)
-        .order('date', { ascending: false });
+        .order('expense_date', { ascending: false });
 
-      if (error) throw error;
+      if (expensesError) throw expensesError;
 
-      setTransactions(data || []);
-      calculateBalance(data || []);
+      setPayments(paymentsData || []);
+      setExpenses(expensesData || []);
+      calculateBalance(paymentsData || [], expensesData || []);
     } catch (err) {
-      console.error('Error loading transactions:', err);
+      console.error('Error loading data:', err);
+      toast.error('Failed to load balance data');
     }
   };
 
-  const calculateBalance = (txns: any[]) => {
-    const income = txns
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-    const expenses = txns
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-    const current = income - expenses;
+  const calculateBalance = (paymentsData: Payment[], expensesData: Expense[]) => {
+    const income = paymentsData.reduce((sum, p) => sum + Number(p.amount), 0);
+    const expensesTotal = expensesData.reduce((sum, e) => sum + Number(e.amount), 0);
+    const current = income - expensesTotal;
 
     setBalance({
       current,
       income,
-      expenses
+      expenses: expensesTotal
     });
   };
 
   const handleAddExpense = async () => {
     if (!newExpense.description || !newExpense.amount) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     setIsLoading(true);
     try {
       const { error } = await supabase
-        .from('transactions')
+        .from('expenses')
         .insert([{
           user_id: user?.id,
-          type: 'expense',
           description: newExpense.description,
           amount: parseFloat(newExpense.amount),
-          date: newExpense.date,
-          source: 'manual'
+          category: newExpense.category,
+          expense_date: newExpense.date
         }]);
 
       if (error) throw error;
 
-      setNewExpense({ description: '', amount: '', date: new Date().toISOString().split('T')[0] });
+      toast.success('Expense added successfully');
+      setNewExpense({ description: '', amount: '', category: 'general', date: new Date().toISOString().split('T')[0] });
       setIsDialogOpen(false);
-      loadTransactions();
+      loadData();
     } catch (err) {
       console.error('Error adding expense:', err);
-      alert('Failed to add expense');
+      toast.error('Failed to add expense');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Expense deleted');
+      loadData();
+    } catch (err) {
+      console.error('Error deleting expense:', err);
+      toast.error('Failed to delete expense');
+    }
+  };
+
+  const expenseCategories = [
+    { value: 'general', label: 'General' },
+    { value: 'equipment', label: 'Equipment' },
+    { value: 'supplies', label: 'Medical Supplies' },
+    { value: 'rent', label: 'Rent' },
+    { value: 'utilities', label: 'Utilities' },
+    { value: 'salaries', label: 'Salaries' },
+    { value: 'marketing', label: 'Marketing' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'other', label: 'Other' }
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -158,13 +220,13 @@ const Balance = () => {
           </Card>
         </div>
 
-        {/* Add Expense Button */}
-        <div className="flex justify-end">
+        {/* Pulse Add Expense Button */}
+        <div className="flex justify-center">
           <Button
             onClick={() => setIsDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white relative overflow-hidden group"
+            className="bg-red-500 hover:bg-red-600 text-white relative overflow-hidden animate-pulse shadow-lg shadow-red-500/30"
+            size="lg"
           >
-            <span className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-20 transition-opacity"></span>
             <Plus className="w-5 h-5 mr-2" />
             Add Expense
           </Button>
@@ -181,68 +243,121 @@ const Balance = () => {
             </TabsList>
             
             <TabsContent value="all" className="space-y-2 mt-4">
-              {transactions.map(transaction => (
-                <Card key={transaction.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        transaction.type === 'income' ? 'bg-green-500/10' : 'bg-red-500/10'
-                      }`}>
-                        <DollarSign className={`w-5 h-5 ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`} />
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                      </div>
-                    </div>
-                    <p className={`font-semibold ${
-                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
-                    </p>
-                  </div>
-                </Card>
-              ))}
-            </TabsContent>
-            
-            <TabsContent value="income" className="space-y-2 mt-4">
-              {transactions.filter(t => t.type === 'income').map(transaction => (
-                <Card key={transaction.id} className="p-4">
+              {/* Income transactions */}
+              {payments.map(payment => (
+                <Card key={payment.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                         <DollarSign className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                        <p className="font-medium">Payment Received</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(payment.paid_at), 'dd-MM-yyyy')} • {payment.payment_method}
+                        </p>
                       </div>
                     </div>
-                    <p className="font-semibold text-green-600">+${transaction.amount}</p>
+                    <p className="font-semibold text-green-600">+${Number(payment.amount).toLocaleString()}</p>
                   </div>
                 </Card>
               ))}
-            </TabsContent>
-            
-            <TabsContent value="expense" className="space-y-2 mt-4">
-              {transactions.filter(t => t.type === 'expense').map(transaction => (
-                <Card key={transaction.id} className="p-4">
+              {/* Expense transactions */}
+              {expenses.map(expense => (
+                <Card key={expense.id} className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
                         <DollarSign className="w-5 h-5 text-red-600" />
                       </div>
                       <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                        <p className="font-medium">{expense.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(expense.expense_date), 'dd-MM-yyyy')} • {expense.category}
+                        </p>
                       </div>
                     </div>
-                    <p className="font-semibold text-red-600">-${transaction.amount}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-red-600">-${Number(expense.amount).toLocaleString()}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteExpense(expense.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
+              {payments.length === 0 && expenses.length === 0 && (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No transactions yet</p>
+                </Card>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="income" className="space-y-2 mt-4">
+              {payments.map(payment => (
+                <Card key={payment.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Payment Received</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(payment.paid_at), 'dd-MM-yyyy')} • {payment.payment_method}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-green-600">+${Number(payment.amount).toLocaleString()}</p>
+                  </div>
+                </Card>
+              ))}
+              {payments.length === 0 && (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No income received yet</p>
+                </Card>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="expense" className="space-y-2 mt-4">
+              {expenses.map(expense => (
+                <Card key={expense.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{expense.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(expense.expense_date), 'dd-MM-yyyy')} • {expense.category}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-red-600">-${Number(expense.amount).toLocaleString()}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteExpense(expense.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              {expenses.length === 0 && (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No expenses added yet</p>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -276,6 +391,22 @@ const Balance = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={newExpense.category}
+                onValueChange={(value) => setNewExpense({ ...newExpense, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {expenseCategories.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
               <Input
                 id="date"
@@ -295,7 +426,7 @@ const Balance = () => {
               <Button
                 onClick={handleAddExpense}
                 disabled={isLoading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-red-500 hover:bg-red-600"
               >
                 {isLoading ? 'Adding...' : 'Add Expense'}
               </Button>
