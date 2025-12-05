@@ -56,16 +56,33 @@ const NewAppointment = () => {
   // Generate week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
+  // Helper to convert time string to minutes for comparison
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Check if two time ranges overlap
+  const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
+    const s1 = timeToMinutes(start1);
+    const e1 = timeToMinutes(end1);
+    const s2 = timeToMinutes(start2);
+    const e2 = timeToMinutes(end2);
+    return s1 < e2 && e1 > s2;
+  };
+
   const getSlotStatus = (slot: { start: string; end: string }) => {
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    const existingAppointment = appointments.find(
+    
+    // Check for any overlapping appointment (not just exact match)
+    const overlappingAppointment = appointments.find(
       apt => apt.appointment_date === dateStr && 
-             apt.start_time === slot.start && 
-             apt.status !== 'cancelled'
+             apt.status !== 'cancelled' &&
+             isOverlapping(slot.start, slot.end, apt.start_time, apt.end_time)
     );
 
-    if (existingAppointment) {
-      return existingAppointment.status === 'completed' ? 'completed' : 'booked';
+    if (overlappingAppointment) {
+      return overlappingAppointment.status === 'completed' ? 'completed' : 'booked';
     }
 
     if (selectedSlot?.start === slot.start) {
@@ -86,16 +103,16 @@ const NewAppointment = () => {
       return;
     }
 
-    // Check if slot is already booked
+    // Check if slot has any overlapping appointment
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     const isSlotBooked = appointments.some(
       apt => apt.appointment_date === dateStr && 
-             apt.start_time === selectedSlot.start && 
-             apt.status !== 'cancelled'
+             apt.status !== 'cancelled' &&
+             isOverlapping(selectedSlot.start, selectedSlot.end, apt.start_time, apt.end_time)
     );
 
     if (isSlotBooked) {
-      toast.error('This time slot is already booked. Please select another time.');
+      toast.error('This time slot overlaps with an existing appointment. Please select another time.');
       return;
     }
 
