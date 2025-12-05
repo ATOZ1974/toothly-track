@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
-import { Plus, MoreVertical, SlidersHorizontal, Clock, Phone, ArrowLeft, Calendar, Search, Edit, Trash2, MessageSquare, RefreshCw } from 'lucide-react';
+import { Plus, MoreVertical, SlidersHorizontal, Clock, Phone, ArrowLeft, Calendar, Search, Edit, Trash2, MessageSquare, RefreshCw, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useAppointments } from '@/hooks/useAppointments';
+import { AppointmentCalendar } from '@/components/appointments/AppointmentCalendar';
 import { toast } from 'sonner';
 
 const BookAppointment = () => {
@@ -22,6 +23,8 @@ const BookAppointment = () => {
   const { appointments, loading, updateAppointment, deleteAppointment, loadAppointments } = useAppointments();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [notesDialog, setNotesDialog] = useState<{ open: boolean; appointmentId: string; notes: string }>({
     open: false,
     appointmentId: '',
@@ -196,8 +199,28 @@ const BookAppointment = () => {
           </div>
         </Card>
 
-        {/* Search and Filter */}
-        <div className="flex gap-3">
+        {/* View Toggle & Search/Filter */}
+        <div className="flex gap-3 items-center">
+          <div className="flex bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 px-3"
+            >
+              <List className="w-4 h-4 mr-1.5" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+              className="h-8 px-3"
+            >
+              <LayoutGrid className="w-4 h-4 mr-1.5" />
+              Calendar
+            </Button>
+          </div>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -221,7 +244,17 @@ const BookAppointment = () => {
           </Select>
         </div>
 
+        {/* Calendar View */}
+        {viewMode === 'calendar' && (
+          <AppointmentCalendar
+            appointments={filteredAppointments}
+            selectedDate={selectedCalendarDate}
+            onDateSelect={setSelectedCalendarDate}
+          />
+        )}
+
         {/* Appointments List */}
+        {viewMode === 'list' && (
         <Tabs defaultValue="upcoming" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
@@ -381,6 +414,7 @@ const BookAppointment = () => {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </div>
 
       {/* Floating Action Button */}
