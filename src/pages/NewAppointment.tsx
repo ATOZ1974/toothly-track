@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon, Search, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Search, Clock, User, ChevronLeft, ChevronRight, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,35 +16,57 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-const timeSlots = [
-  { start: '09:00', end: '09:30' },
-  { start: '09:30', end: '10:00' },
-  { start: '10:00', end: '10:30' },
-  { start: '10:30', end: '11:00' },
-  { start: '11:00', end: '11:30' },
-  { start: '11:30', end: '12:00' },
-  { start: '12:00', end: '12:30' },
-  { start: '12:30', end: '13:00' },
-  { start: '14:00', end: '14:30' },
-  { start: '14:30', end: '15:00' },
-  { start: '15:00', end: '15:30' },
-  { start: '15:30', end: '16:00' },
-  { start: '16:00', end: '16:30' },
-  { start: '16:30', end: '17:00' },
-  { start: '17:00', end: '17:30' },
-  { start: '17:30', end: '18:00' },
+// Available duration options in minutes
+const durationOptions = [
+  { value: 15, label: '15 min' },
+  { value: 30, label: '30 min' },
+  { value: 45, label: '45 min' },
+  { value: 60, label: '60 min' },
 ];
+
+// Generate available start times (every 15 minutes from 9am to 6pm)
+const generateStartTimes = () => {
+  const times: string[] = [];
+  for (let hour = 9; hour < 18; hour++) {
+    for (let min = 0; min < 60; min += 15) {
+      const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+      times.push(timeStr);
+    }
+  }
+  return times;
+};
+
+const startTimes = generateStartTimes();
+
+// Helper to add minutes to a time string
+const addMinutesToTime = (time: string, minutes: number): string => {
+  const [hours, mins] = time.split(':').map(Number);
+  const totalMins = hours * 60 + mins + minutes;
+  const newHours = Math.floor(totalMins / 60);
+  const newMins = totalMins % 60;
+  return `${newHours.toString().padStart(2, '0')}:${newMins.toString().padStart(2, '0')}`;
+};
 
 const NewAppointment = () => {
   const navigate = useNavigate();
   const { patients } = usePatients();
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedSlot, setSelectedSlot] = useState<{ start: string; end: string } | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState('');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const { appointments, createAppointment, loading } = useAppointments(selectedDate);
+
+  // Calculate selected slot based on time and duration
+  const selectedSlot = useMemo(() => {
+    if (!selectedTime) return null;
+    return {
+      start: selectedTime,
+      end: addMinutesToTime(selectedTime, selectedDuration)
+    };
+  }, [selectedTime, selectedDuration]);
 
   const filteredPatients = patients.filter(patient =>
     patient.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,26 +93,41 @@ const NewAppointment = () => {
     return s1 < e2 && e1 > s2;
   };
 
-  const getSlotStatus = (slot: { start: string; end: string }) => {
+  // Get status for a time slot given start time and duration
+  const getTimeStatus = (startTime: string) => {
+    const endTime = addMinutesToTime(startTime, selectedDuration);
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     
-    // Check for any overlapping appointment (not just exact match)
+    // Check if end time exceeds working hours (18:00)
+    if (timeToMinutes(endTime) > timeToMinutes('18:00')) {
+      return 'unavailable';
+    }
+    
+    // Check for any overlapping appointment
     const overlappingAppointment = appointments.find(
       apt => apt.appointment_date === dateStr && 
              apt.status !== 'cancelled' &&
-             isOverlapping(slot.start, slot.end, apt.start_time, apt.end_time)
+             isOverlapping(startTime, endTime, apt.start_time, apt.end_time)
     );
 
     if (overlappingAppointment) {
       return overlappingAppointment.status === 'completed' ? 'completed' : 'booked';
     }
 
-    if (selectedSlot?.start === slot.start) {
+    if (selectedTime === startTime) {
       return 'selected';
     }
 
     return 'available';
   };
+
+  // Filter start times that can fit the selected duration
+  const availableStartTimes = useMemo(() => {
+    return startTimes.filter(time => {
+      const endTime = addMinutesToTime(time, selectedDuration);
+      return timeToMinutes(endTime) <= timeToMinutes('18:00');
+    });
+  }, [selectedDuration]);
 
   const handleSave = async () => {
     if (!selectedPatient) {
@@ -131,8 +168,8 @@ const NewAppointment = () => {
     }
   };
 
-  const availableSlots = timeSlots.filter(slot => getSlotStatus(slot) === 'available').length;
-  const bookedSlots = timeSlots.filter(slot => getSlotStatus(slot) === 'booked').length;
+  const availableSlots = availableStartTimes.filter(time => getTimeStatus(time) === 'available').length;
+  const bookedSlots = availableStartTimes.filter(time => getTimeStatus(time) === 'booked').length;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -246,7 +283,7 @@ const NewAppointment = () => {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      setSelectedSlot(null);
+                      setSelectedTime(null);
                     }
                   }}
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
@@ -279,7 +316,7 @@ const NewAppointment = () => {
                     onClick={() => {
                       if (!isPast) {
                         setSelectedDate(day);
-                        setSelectedSlot(null);
+                        setSelectedTime(null);
                       }
                     }}
                     disabled={isPast}
@@ -314,6 +351,32 @@ const NewAppointment = () => {
           </div>
         </Card>
 
+        {/* Duration Selection */}
+        <Card className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Timer className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Appointment Duration</h2>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {durationOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={selectedDuration === option.value ? 'default' : 'outline'}
+                onClick={() => {
+                  setSelectedDuration(option.value);
+                  setSelectedTime(null); // Reset time when duration changes
+                }}
+                className={cn(
+                  "h-12 font-medium transition-all",
+                  selectedDuration === option.value && "shadow-md ring-2 ring-primary/30"
+                )}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </Card>
+
         {/* Time Slots */}
         <Card className="p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -327,22 +390,22 @@ const NewAppointment = () => {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {[...Array(12)].map((_, i) => (
                 <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
               ))}
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-2">
-                {timeSlots.map((slot) => {
-                  const status = getSlotStatus(slot);
+              <div className="grid grid-cols-4 gap-2">
+                {availableStartTimes.map((time) => {
+                  const status = getTimeStatus(time);
                   return (
                     <Button
-                      key={`${slot.start}-${slot.end}`}
+                      key={time}
                       variant="outline"
-                      disabled={status === 'booked' || status === 'completed'}
-                      onClick={() => setSelectedSlot(slot)}
+                      disabled={status === 'booked' || status === 'completed' || status === 'unavailable'}
+                      onClick={() => setSelectedTime(time)}
                       className={cn(
                         "h-12 text-sm font-medium transition-all",
                         status === 'selected' && "bg-primary text-primary-foreground border-primary shadow-md ring-2 ring-primary/30",
@@ -351,7 +414,7 @@ const NewAppointment = () => {
                         status === 'available' && "hover:border-primary hover:bg-primary/5"
                       )}
                     >
-                      {slot.start}
+                      {time}
                     </Button>
                   );
                 })}
@@ -409,6 +472,10 @@ const NewAppointment = () => {
                   <span className="text-muted-foreground">Time:</span>
                   <span className="font-medium">{selectedSlot.start} - {selectedSlot.end}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="font-medium">{selectedDuration} minutes</span>
+                </div>
               </div>
             </Card>
           </motion.div>
@@ -416,7 +483,7 @@ const NewAppointment = () => {
 
         <Button
           onClick={handleSave}
-          disabled={!selectedPatient || !selectedSlot || loading}
+          disabled={!selectedPatient || !selectedTime || loading}
           className="w-full h-14 text-lg font-semibold"
           size="lg"
         >
