@@ -75,9 +75,12 @@ export function useAppointments(date?: Date) {
     }
   };
 
+  // Convert date to string for proper dependency tracking
+  const dateStr = date ? date.toISOString().split('T')[0] : null;
+  
   useEffect(() => {
     loadAppointments();
-  }, [user, date]);
+  }, [user, dateStr]);
 
   const createAppointment = async (appointment: Omit<Appointment, 'id' | 'reminder_sent' | 'patient'>) => {
     try {
