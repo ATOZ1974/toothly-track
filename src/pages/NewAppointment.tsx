@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon, Search, Clock, User, ChevronLeft, ChevronRight, Timer } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Search, Clock, User, ChevronLeft, ChevronRight, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,17 +14,9 @@ import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePatients } from '@/hooks/usePatients';
 import { useAppointments } from '@/hooks/useAppointments';
-import { useClinicSettings } from '@/hooks/useClinicSettings';
+import { useClinicSettings, getDayKey } from '@/hooks/useClinicSettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
-// Available duration options in minutes
-const durationOptions = [
-  { value: 15, label: '15 min' },
-  { value: 30, label: '30 min' },
-  { value: 45, label: '45 min' },
-  { value: 60, label: '60 min' },
-];
 
 // Helper to convert time string to minutes for comparison
 const timeToMinutes = (time: string) => {
@@ -63,17 +55,26 @@ const NewAppointment = () => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<number>(30);
+  const [selectedAppointmentType, setSelectedAppointmentType] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState('');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const { appointments, createAppointment, loading } = useAppointments(selectedDate);
 
-  // Generate start times based on clinic working hours
-  const startTimes = useMemo(() => 
-    generateStartTimes(clinicSettings.workingHoursStart, clinicSettings.workingHoursEnd),
-    [clinicSettings.workingHoursStart, clinicSettings.workingHoursEnd]
-  );
+  // Get working hours for selected date
+  const dayKey = getDayKey(selectedDate);
+  const dayHours = clinicSettings.weeklyHours[dayKey];
+  const isClinicOpen = dayHours.isOpen;
+
+  // Get selected appointment type and its duration
+  const selectedTypeData = clinicSettings.appointmentTypes.find(t => t.id === selectedAppointmentType);
+  const selectedDuration = selectedTypeData?.defaultDuration || 30;
+
+  // Generate start times based on day-specific working hours
+  const startTimes = useMemo(() => {
+    if (!isClinicOpen) return [];
+    return generateStartTimes(dayHours.start, dayHours.end);
+  }, [isClinicOpen, dayHours.start, dayHours.end]);
 
   // Calculate selected slot based on time and duration
   const selectedSlot = useMemo(() => {
@@ -119,8 +120,8 @@ const NewAppointment = () => {
   const getTimeStatus = (startTime: string) => {
     const endTime = addMinutesToTime(startTime, selectedDuration);
     
-    // Check if end time exceeds working hours
-    if (timeToMinutes(endTime) > timeToMinutes(clinicSettings.workingHoursEnd)) {
+    // Check if end time exceeds working hours for the day
+    if (timeToMinutes(endTime) > timeToMinutes(dayHours.end)) {
       return 'unavailable';
     }
     
@@ -140,15 +141,21 @@ const NewAppointment = () => {
 
   // Filter start times that can fit the selected duration
   const availableStartTimes = useMemo(() => {
+    if (!isClinicOpen) return [];
     return startTimes.filter(time => {
       const endTime = addMinutesToTime(time, selectedDuration);
-      return timeToMinutes(endTime) <= timeToMinutes(clinicSettings.workingHoursEnd);
+      return timeToMinutes(endTime) <= timeToMinutes(dayHours.end);
     });
-  }, [startTimes, selectedDuration, clinicSettings.workingHoursEnd]);
+  }, [startTimes, selectedDuration, dayHours.end, isClinicOpen]);
 
   const handleSave = async () => {
     if (!selectedPatient) {
       toast.error('Please select a patient');
+      return;
+    }
+
+    if (!selectedAppointmentType) {
+      toast.error('Please select an appointment type');
       return;
     }
 
@@ -170,13 +177,17 @@ const NewAppointment = () => {
       return;
     }
 
+    const appointmentNotes = selectedTypeData 
+      ? `${selectedTypeData.name}${notes ? ` - ${notes}` : ''}`
+      : notes;
+
     const success = await createAppointment({
       patient_id: selectedPatient,
       appointment_date: dateStr,
       start_time: selectedSlot.start,
       end_time: selectedSlot.end,
       status: 'scheduled',
-      notes: notes || undefined,
+      notes: appointmentNotes || undefined,
       reminder_time: new Date(selectedDate.getTime() - 60 * 60 * 1000).toISOString(),
     });
 
@@ -368,27 +379,39 @@ const NewAppointment = () => {
           </div>
         </Card>
 
-        {/* Duration Selection */}
+        {/* Appointment Type Selection */}
         <Card className="p-4 space-y-4">
           <div className="flex items-center gap-2">
-            <Timer className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Appointment Duration</h2>
+            <Stethoscope className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Appointment Type</h2>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {durationOptions.map((option) => (
+          <div className="grid grid-cols-2 gap-2">
+            {clinicSettings.appointmentTypes.map((type) => (
               <Button
-                key={option.value}
-                variant={selectedDuration === option.value ? 'default' : 'outline'}
+                key={type.id}
+                variant={selectedAppointmentType === type.id ? 'default' : 'outline'}
                 onClick={() => {
-                  setSelectedDuration(option.value);
-                  setSelectedTime(null); // Reset time when duration changes
+                  setSelectedAppointmentType(type.id);
+                  setSelectedTime(null); // Reset time when type changes
                 }}
                 className={cn(
-                  "h-12 font-medium transition-all",
-                  selectedDuration === option.value && "shadow-md ring-2 ring-primary/30"
+                  "h-auto py-3 px-4 flex flex-col items-start gap-1 transition-all",
+                  selectedAppointmentType === type.id && "shadow-md ring-2 ring-primary/30"
                 )}
               >
-                {option.label}
+                <div className="flex items-center gap-2 w-full">
+                  <div 
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: type.color }}
+                  />
+                  <span className="font-medium text-sm">{type.name}</span>
+                </div>
+                <span className={cn(
+                  "text-xs",
+                  selectedAppointmentType === type.id ? "text-primary-foreground/80" : "text-muted-foreground"
+                )}>
+                  {type.defaultDuration} min
+                </span>
               </Button>
             ))}
           </div>
@@ -406,7 +429,16 @@ const NewAppointment = () => {
             </div>
           </div>
 
-          {loading ? (
+          {!isClinicOpen ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Clinic is closed on {format(selectedDate, 'EEEE')}s</p>
+              <p className="text-sm text-muted-foreground mt-1">Please select another date</p>
+            </div>
+          ) : !selectedAppointmentType ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Please select an appointment type first</p>
+            </div>
+          ) : loading ? (
             <div className="grid grid-cols-4 gap-2">
               {[...Array(12)].map((_, i) => (
                 <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
@@ -502,7 +534,7 @@ const NewAppointment = () => {
         </Card>
 
         {/* Summary & Save */}
-        {selectedPatient && selectedSlot && (
+        {selectedPatient && selectedSlot && selectedTypeData && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -513,6 +545,16 @@ const NewAppointment = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Patient:</span>
                   <span className="font-medium">{selectedPatientData?.patient.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type:</span>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: selectedTypeData.color }}
+                    />
+                    <span className="font-medium">{selectedTypeData.name}</span>
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date:</span>
@@ -533,7 +575,7 @@ const NewAppointment = () => {
 
         <Button
           onClick={handleSave}
-          disabled={!selectedPatient || !selectedTime || loading}
+          disabled={!selectedPatient || !selectedAppointmentType || !selectedTime || loading}
           className="w-full h-14 text-lg font-semibold"
           size="lg"
         >
