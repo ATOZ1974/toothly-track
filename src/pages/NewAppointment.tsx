@@ -11,8 +11,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePatients } from '@/hooks/usePatients';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useClinicSettings } from '@/hooks/useClinicSettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -24,19 +26,26 @@ const durationOptions = [
   { value: 60, label: '60 min' },
 ];
 
-// Generate available start times (every 15 minutes from 9am to 6pm)
-const generateStartTimes = () => {
+// Helper to convert time string to minutes for comparison
+const timeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// Generate available start times based on working hours
+const generateStartTimes = (startHour: string, endHour: string) => {
   const times: string[] = [];
-  for (let hour = 9; hour < 18; hour++) {
-    for (let min = 0; min < 60; min += 15) {
-      const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-      times.push(timeStr);
-    }
+  const startMins = timeToMinutes(startHour);
+  const endMins = timeToMinutes(endHour);
+  
+  for (let mins = startMins; mins < endMins; mins += 15) {
+    const hours = Math.floor(mins / 60);
+    const minutes = mins % 60;
+    const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    times.push(timeStr);
   }
   return times;
 };
-
-const startTimes = generateStartTimes();
 
 // Helper to add minutes to a time string
 const addMinutesToTime = (time: string, minutes: number): string => {
@@ -50,6 +59,7 @@ const addMinutesToTime = (time: string, minutes: number): string => {
 const NewAppointment = () => {
   const navigate = useNavigate();
   const { patients } = usePatients();
+  const { settings: clinicSettings } = useClinicSettings();
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -58,6 +68,12 @@ const NewAppointment = () => {
   const [notes, setNotes] = useState('');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const { appointments, createAppointment, loading } = useAppointments(selectedDate);
+
+  // Generate start times based on clinic working hours
+  const startTimes = useMemo(() => 
+    generateStartTimes(clinicSettings.workingHoursStart, clinicSettings.workingHoursEnd),
+    [clinicSettings.workingHoursStart, clinicSettings.workingHoursEnd]
+  );
 
   // Calculate selected slot based on time and duration
   const selectedSlot = useMemo(() => {
@@ -78,12 +94,6 @@ const NewAppointment = () => {
   // Generate week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Helper to convert time string to minutes for comparison
-  const timeToMinutes = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
   // Check if two time ranges overlap
   const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
     const s1 = timeToMinutes(start1);
@@ -93,22 +103,29 @@ const NewAppointment = () => {
     return s1 < e2 && e1 > s2;
   };
 
-  // Get status for a time slot given start time and duration
-  const getTimeStatus = (startTime: string) => {
+  // Get overlapping appointment for a time slot
+  const getOverlappingAppointment = (startTime: string) => {
     const endTime = addMinutesToTime(startTime, selectedDuration);
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     
-    // Check if end time exceeds working hours (18:00)
-    if (timeToMinutes(endTime) > timeToMinutes('18:00')) {
-      return 'unavailable';
-    }
-    
-    // Check for any overlapping appointment
-    const overlappingAppointment = appointments.find(
+    return appointments.find(
       apt => apt.appointment_date === dateStr && 
              apt.status !== 'cancelled' &&
              isOverlapping(startTime, endTime, apt.start_time, apt.end_time)
     );
+  };
+
+  // Get status for a time slot given start time and duration
+  const getTimeStatus = (startTime: string) => {
+    const endTime = addMinutesToTime(startTime, selectedDuration);
+    
+    // Check if end time exceeds working hours
+    if (timeToMinutes(endTime) > timeToMinutes(clinicSettings.workingHoursEnd)) {
+      return 'unavailable';
+    }
+    
+    // Check for any overlapping appointment
+    const overlappingAppointment = getOverlappingAppointment(startTime);
 
     if (overlappingAppointment) {
       return overlappingAppointment.status === 'completed' ? 'completed' : 'booked';
@@ -125,9 +142,9 @@ const NewAppointment = () => {
   const availableStartTimes = useMemo(() => {
     return startTimes.filter(time => {
       const endTime = addMinutesToTime(time, selectedDuration);
-      return timeToMinutes(endTime) <= timeToMinutes('18:00');
+      return timeToMinutes(endTime) <= timeToMinutes(clinicSettings.workingHoursEnd);
     });
-  }, [selectedDuration]);
+  }, [startTimes, selectedDuration, clinicSettings.workingHoursEnd]);
 
   const handleSave = async () => {
     if (!selectedPatient) {
@@ -397,28 +414,61 @@ const NewAppointment = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-4 gap-2">
-                {availableStartTimes.map((time) => {
-                  const status = getTimeStatus(time);
-                  return (
-                    <Button
-                      key={time}
-                      variant="outline"
-                      disabled={status === 'booked' || status === 'completed' || status === 'unavailable'}
-                      onClick={() => setSelectedTime(time)}
-                      className={cn(
-                        "h-12 text-sm font-medium transition-all",
-                        status === 'selected' && "bg-primary text-primary-foreground border-primary shadow-md ring-2 ring-primary/30",
-                        status === 'booked' && "bg-destructive/10 text-destructive border-destructive/30 cursor-not-allowed",
-                        status === 'completed' && "bg-muted text-muted-foreground opacity-60 cursor-not-allowed",
-                        status === 'available' && "hover:border-primary hover:bg-primary/5"
-                      )}
-                    >
-                      {time}
-                    </Button>
-                  );
-                })}
-              </div>
+              <TooltipProvider>
+                <div className="grid grid-cols-4 gap-2">
+                  {availableStartTimes.map((time) => {
+                    const status = getTimeStatus(time);
+                    const overlappingApt = getOverlappingAppointment(time);
+                    const patientData = overlappingApt 
+                      ? patients.find(p => p.id === overlappingApt.patient_id) 
+                      : null;
+                    
+                    const button = (
+                      <Button
+                        key={time}
+                        variant="outline"
+                        disabled={status === 'booked' || status === 'completed' || status === 'unavailable'}
+                        onClick={() => setSelectedTime(time)}
+                        className={cn(
+                          "h-12 text-sm font-medium transition-all",
+                          status === 'selected' && "bg-primary text-primary-foreground border-primary shadow-md ring-2 ring-primary/30",
+                          status === 'booked' && "bg-destructive/10 text-destructive border-destructive/30 cursor-not-allowed",
+                          status === 'completed' && "bg-muted text-muted-foreground opacity-60 cursor-not-allowed",
+                          status === 'available' && "hover:border-primary hover:bg-primary/5"
+                        )}
+                      >
+                        {time}
+                      </Button>
+                    );
+
+                    if ((status === 'booked' || status === 'completed') && overlappingApt && patientData) {
+                      return (
+                        <Tooltip key={time}>
+                          <TooltipTrigger asChild>
+                            {button}
+                          </TooltipTrigger>
+                          <TooltipContent className="p-3 max-w-[200px]">
+                            <div className="space-y-1">
+                              <p className="font-semibold">{patientData.patient.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {overlappingApt.start_time} - {overlappingApt.end_time}
+                              </p>
+                              {patientData.patient.phone && (
+                                <p className="text-xs">{patientData.patient.phone}</p>
+                              )}
+                              {overlappingApt.notes && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{overlappingApt.notes}</p>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
+                    return button;
+                  })}
+                </div>
+              </TooltipProvider>
 
               {/* Legend */}
               <div className="flex flex-wrap gap-4 text-xs pt-2">
